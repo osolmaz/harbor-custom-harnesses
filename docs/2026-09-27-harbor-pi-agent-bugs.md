@@ -12,7 +12,7 @@ Passing `--` before the instruction fixes it. With a local Pi, `pi --print --mod
 
 Before installing Pi, Harbor's `install()` calls `ensure_system_dependencies(environment, ("curl",))`. When an image has no curl, this runs `apt-get update && apt-get install -y curl`. On the Debian bullseye images of `qemu-startup` and `qemu-alpine-ssh`, `apt-get update` succeeds but the curl packages in `bullseye-security` return `404 Not Found`, so the install exits with status 100 and the agent never starts.
 
-The failure depends on the state of the Debian mirror, so a plain retry can fail again. A sturdier install would use `wget` when it exists, retry apt with `--fix-missing`, or install Node without curl.
+Harbor's ACP agent install runs the same apt step, so the two qemu tasks fail the same way with the Code Mode harness (run `run-6e4caf5b4971e0f8a1c7560d`). The failure depends on the state of the Debian mirror, so a plain retry can fail again. A sturdier install would use `wget` when it exists, retry apt with `--fix-missing`, or install Node without curl.
 
 ## Status
 
