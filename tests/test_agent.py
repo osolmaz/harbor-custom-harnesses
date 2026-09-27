@@ -119,7 +119,7 @@ async def test_native_acp_session(harness: agent.PiCodeModeAgent) -> None:
     initialized = await harness.initialize(1)
     assert initialized.agent_info is not None
     assert initialized.agent_info.name == "pi-code-mode"
-    assert initialized.agent_info.version == "0.1.0rc11"
+    assert initialized.agent_info.version == "0.1.0rc12"
     assert initialized.protocol_version == 1
     assert initialized.agent_capabilities is not None
     response = await harness.new_session("/app")
@@ -655,7 +655,7 @@ async def test_nim_uses_the_reviewed_nvidia_route(
     assert calls[0]["base_url"] == "https://integrate.api.nvidia.com/v1"
     model = cast(dict[str, object], calls[0]["model"])
     assert model["id"] == "private/vendor/model"
-    assert model["compat"] == {"supportsReasoningEffort": True}
+    assert model["thinkingLevelMap"] == {"xhigh": "xhigh"}
     assert (model["contextWindow"], model["maxTokens"]) == (1000000, 16384)
     await instance.close()
 

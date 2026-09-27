@@ -127,7 +127,12 @@ def nim_model(
         "input": ["text"],
         "contextWindow": context_window,
         "maxTokens": max_tokens,
-        "compat": {"supportsReasoningEffort": True},
+        "compat": {
+            "supportsReasoningEffort": True,
+            "thinkingTokenBudgetField": "reasoning_budget",
+        },
+        # Without this map Pi lowers a requested xhigh to high for custom models.
+        "thinkingLevelMap": {"xhigh": "xhigh"},
         "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
     }
 
