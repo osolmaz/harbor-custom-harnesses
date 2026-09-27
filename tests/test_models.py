@@ -480,7 +480,7 @@ def test_nim_model_row() -> None:
     row = models.nim_model("openai/private/vendor/model", 1000000, 16384)
     assert row["id"] == "private/vendor/model"
     assert row["reasoning"] is True
-    assert row["compat"] == {"supportsReasoningEffort": True}
+    assert row["thinkingLevelMap"] == {"xhigh": "xhigh"}
     with pytest.raises(ValueError, match="explicit openai"):
         models.nim_model("private/vendor/model", 1000000, 16384)
     with pytest.raises(ValueError, match="NIM limits"):
@@ -495,7 +495,11 @@ def test_nim_model_exact_row_and_limits() -> None:
         "input": ["text"],
         "contextWindow": 1000,
         "maxTokens": 1000,
-        "compat": {"supportsReasoningEffort": True},
+        "compat": {
+            "supportsReasoningEffort": True,
+            "thinkingTokenBudgetField": "reasoning_budget",
+        },
+        "thinkingLevelMap": {"xhigh": "xhigh"},
         "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
     }
     for requested in ("openai/", "private/openai/"):
