@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "pi-code-mode-nim",
-  "version": "0.1.0rc12",
+  "version": "0.1.0rc13",
   "protocol": "acp",
   "runtime": {
     "kind": "python-uv",
