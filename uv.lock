@@ -428,7 +428,7 @@ wheels = [
 
 [[package]]
 name = "harbor-pi-code-mode-runtime"
-version = "0.1.0rc12"
+version = "0.1.0rc13"
 source = { editable = "." }
 dependencies = [
     { name = "agent-client-protocol" },

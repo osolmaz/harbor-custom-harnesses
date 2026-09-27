@@ -515,6 +515,8 @@ def test_nim_base_url_reaches_pi_models(
         "hf-pinned"
     ]
     assert provider["baseUrl"] == "https://integrate.api.nvidia.com/v1"
+    settings_file = json.loads((settings / "settings.json").read_text())
+    assert settings_file["retry"] == {"enabled": True}
     with pytest.raises(ValueError, match="HF router or NVIDIA NIM"):
         runtime.command(
             {"id": "x"}, settings, logs, "code", base_url="https://other.example/v1"
@@ -550,3 +552,6 @@ def test_router_is_the_default_pi_base_url(
         "hf-pinned"
     ]
     assert provider["baseUrl"] == "https://router.huggingface.co/v1"
+    assert json.loads((settings / "settings.json").read_text())["retry"] == {
+        "enabled": False
+    }
