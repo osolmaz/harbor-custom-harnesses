@@ -119,7 +119,7 @@ async def test_native_acp_session(harness: agent.PiCodeModeAgent) -> None:
     initialized = await harness.initialize(1)
     assert initialized.agent_info is not None
     assert initialized.agent_info.name == "pi-code-mode"
-    assert initialized.agent_info.version == "0.1.0rc12"
+    assert initialized.agent_info.version == "0.1.0rc13"
     assert initialized.protocol_version == 1
     assert initialized.agent_capabilities is not None
     response = await harness.new_session("/app")
@@ -818,3 +818,18 @@ async def test_nim_accepts_a_trailing_slash(
     instance.on_connect(cast(Client, AsyncMock(spec=Client)))
     await instance.new_session("/app")
     await instance.close()
+
+
+async def test_successful_retry_clears_a_provider_failure(
+    harness: agent.PiCodeModeAgent,
+) -> None:
+    await harness.new_session("/app")
+    await harness.event(
+        {"type": "message_end", "message": {"role": "assistant", "stopReason": "error"}}
+    )
+    assert harness.failed is True
+    await harness.event({"type": "auto_retry_end", "success": False, "attempt": 3})
+    assert harness.failed is True
+    await harness.event({"type": "auto_retry_end", "success": True, "attempt": 1})
+    assert harness.failed is False
+    await harness.close()
