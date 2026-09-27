@@ -124,7 +124,7 @@ class PiCodeModeAgent(Agent):
             agent_capabilities=AgentCapabilities(),
             agent_info=Implementation(
                 name="pi-code-mode" if self.code_mode == "code" else "pi-direct",
-                version="0.1.0rc12",
+                version="0.1.0rc13",
             ),
         )
 
@@ -327,6 +327,9 @@ class PiCodeModeAgent(Agent):
         kind = event.get("type")
         if kind == "message_end":
             await self.message(event)
+        elif kind == "auto_retry_end" and event.get("success") is True:
+            # Pi retried a failed provider response and a later attempt succeeded.
+            self.failed = False
         elif kind == "tool_execution_start":
             await self.conn.session_update(
                 session_id=self.session_id,

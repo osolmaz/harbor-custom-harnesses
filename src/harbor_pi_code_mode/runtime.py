@@ -256,7 +256,9 @@ def _pi_command(
     (settings / "settings.json").write_text(
         json.dumps(
             {
-                "retry": {"enabled": False},
+                # NIM answers transient 502s; Pi's default retry (3 attempts) covers
+                # them. The HF router keeps retries off so every request is counted.
+                "retry": {"enabled": base_url == NIM_ENDPOINT},
                 "compaction": {"enabled": True},
             }
         )
