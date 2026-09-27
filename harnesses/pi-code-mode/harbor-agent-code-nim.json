@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "id": "pi-code-mode-nim",
-  "version": "0.1.0rc11",
+  "version": "0.1.0rc12",
   "protocol": "acp",
   "runtime": {
     "kind": "python-uv",
@@ -15,7 +15,7 @@
       "--thinking",
       "xhigh",
       "--max-output-tokens",
-      "16384",
+      "65536",
       "--nim-context-window",
       "1000000"
     ]
