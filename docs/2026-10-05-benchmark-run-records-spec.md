@@ -7,7 +7,7 @@ tags: [runs, harnesses, harbor, reproducibility, spec]
 
 # Self-contained benchmark run records
 
-Status: proposed. Nothing in this spec is implemented yet.
+Status: past runs from 2026-09-11 to 2026-09-26 are recorded under `runs/`. The payload split and the repository check are not implemented yet.
 
 ## Problem
 
@@ -43,7 +43,7 @@ runs/
 
 ### Harness folder
 
-- The name is the harness name from `harnesses/`, such as `pi-code-mode`, `localpi`, or `openclaw-native`. When one run needs a second version of the same harness, the new folder gets the suffix `-2`, then `-3`.
+- The name is the harness name from `harnesses/`, such as `pi-code-mode`, `localpi`, or `openclaw-native`. When a run has more than one folder for the same harness, each name adds a short arm name, such as `localpi-think` and `localpi-nothink`.
 - The folder is Harbor's `source_dir`. Harbor uploads all of it into the task environment and runs `uv sync --frozen` in it. The folder therefore holds only what the install needs, plus the small `build/` record.
 - It contains:
   - `harbor-agent.json`: the Harbor ACP source manifest. Its entrypoint carries every flag for this run, so the folder has exactly one manifest.
@@ -56,12 +56,13 @@ runs/
 
 - `<harness>.yaml`, next to the harness folder, is the Harbor job config for that harness. It uses Harbor's native `JobConfig` format and adds no schema of its own.
 - Its agent entry is `name: acp`, with `kwargs.source` set to this repository, the full commit, `source_dir: runs/<run>/<harness>`, and `manifest_path: harbor-agent.json`. It also sets `manifest_sha256`.
+- When several runs used the same harness folder, for example a canary and the full run, the job config is the main run's config, and the README lists the other runs.
 - The job config is outside the harness folder for two reasons. A file cannot hold the hash of its own commit. And the harness folder must stay identical to the pinned commit, so nothing may be added to it later.
 
 ## Rules
 
 1. Commit the harness folder first. Then write the job config with `ref` set to that commit, commit it, and launch from it.
-2. Do not change a harness folder or a job config after a launch. A fix goes in a new harness folder (`-2`) or a new run folder. Only `README.md` gets later additions, such as run IDs and status.
+2. Do not change a harness folder or a job config after a launch. A fix goes in a new harness folder or a new run folder. Only `README.md` gets later additions, such as run IDs and status.
 3. Keep credentials, local paths, and private values out. This repository is public, and it must stay public because Harbor-HF fetches harness sources without credentials.
    - Put keys and private endpoints in the agent `env` as `${VAR}` references. Harbor resolves these from the launch environment.
    - Harbor does not resolve `${VAR}` in `model_name`. A run whose model name is not yet public is recorded here only after the name becomes public.
@@ -86,7 +87,7 @@ Past runs are added with the same layout, with two differences:
 - The job config keeps the pin that actually ran. That pin points into `harnesses/` at an older commit, not into the run folder.
 - The harness folder is a copy of the files at that commit: the manifest and project from `harnesses/<harness>/`, and the adapter source from `src/` or `runtimes/`. At that time the adapter ran from inside the released wheel, so the copied source is a record of what the wheel was built from. To run a past run again, use its original pin. The README marks the folder as a reconstruction and names the source commit.
 
-The pins come from Harbor-HF run records in the run Bucket, from Harbor-HF presets, and from launch files. A past run is added only when its pin can be found.
+The pins come from Harbor-HF run records in the run Bucket, from Harbor-HF presets, and from launch files. A past run is added only when its pin can be found. Earlier probes that used other pins are listed in the README without a harness folder.
 
 ## Changes this needs
 
