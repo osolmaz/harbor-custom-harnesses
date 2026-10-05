@@ -1,0 +1,7 @@
+python:
+  dry:
+    exclude:
+      - pattern: runs/**
+        reason: >-
+          Run records copy each harness at its pin on purpose, so one run never
+          depends on another; see docs/2026-10-05-benchmark-run-records-spec.md.

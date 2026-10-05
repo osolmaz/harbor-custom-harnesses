@@ -1,0 +1,31 @@
+# Harbor job config for localpi-bonsai, from the Harbor-HF run record run-491655a84aa51063d9f7c519.
+# The agent source keeps the pin that ran. `jobs_dir` is left out because it was a
+# Harbor-HF host path.
+# Replaced or removed private values: the credential alias in `OPENAI_API_KEY`; the private endpoint URL in `OPENAI_BASE_URL`; `extra_allowed_hosts`, which named the private endpoint host; the private ShellBench dataset repository and revision in `repo`; they are in the run record.
+job_name: job
+n_attempts: 1
+n_concurrent_trials: 1
+agent_setup_timeout_multiplier: 2
+agent_timeout_multiplier: 4
+environment:
+  import_path: harbor_hf_agents.hf_sandbox:LabeledHFSandboxEnvironment
+  kwargs:
+    flavor: cpu-upgrade
+    job_timeout: none
+    run_label: run-491655a84aa51063d9f7c519
+agents:
+- env:
+    OPENAI_API_KEY: ${OPENAI_API_KEY}
+    OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+  import_path: harbor.agents.installed.acp:AcpAgent
+  kwargs:
+    source:
+      manifest_path: harbor-agent-llama-cpp-endpoint-cap-canary.json
+      ref: 9e7fd5255a466df6307d06b3ae079e8083b3a9a8
+      repo_url: https://github.com/osolmaz/harbor-hf-customization.git
+      source_dir: harnesses/localpi
+    version: 0.1.0rc10
+  model_name: openai/bonsai-2-27b-ternary
+datasets:
+- path: tasks
+  repo: PRIVATE_SHELLBENCH_DATASET

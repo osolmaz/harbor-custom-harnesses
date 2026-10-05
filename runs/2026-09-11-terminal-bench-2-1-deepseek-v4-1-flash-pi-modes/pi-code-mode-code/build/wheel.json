@@ -1,0 +1,6 @@
+{
+  "wheel": "harbor_pi_code_mode_runtime-0.1.0rc4-py3-none-linux_x86_64.whl",
+  "url": "https://github.com/osolmaz/harbor-custom-harnesses/releases/download/pi-code-mode-0.1.0rc4/harbor_pi_code_mode_runtime-0.1.0rc4-py3-none-linux_x86_64.whl",
+  "sha256": "47bc20ad645ce2c7630fbf4861563e4beccc5e1714d00d1f42765d25a992ed5a",
+  "release_tag": "pi-code-mode-0.1.0rc4"
+}

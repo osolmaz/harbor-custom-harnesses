@@ -1,0 +1,32 @@
+# Harbor job config for pi-code-mode-code, from the Harbor-HF run record run-4b9e49566cff51cf698acd86.
+# The agent source keeps the pin that ran. `jobs_dir` is left out because it was a
+# Harbor-HF host path.
+job_name: job
+n_attempts: 1
+n_concurrent_trials: 8
+agent_timeout_multiplier: 4
+retry:
+  max_retries: 0
+environment:
+  env: {}
+  import_path: harbor_hf_agents.hf_sandbox:LabeledHFSandboxEnvironment
+  kwargs:
+    flavor: cpu-upgrade
+    job_timeout: none
+    run_label: run-4b9e49566cff51cf698acd86
+agents:
+- env:
+    OPENAI_API_KEY: ${HF_INFERENCE_TOKEN}
+    OPENAI_BASE_URL: https://router.huggingface.co/v1
+  kwargs:
+    source:
+      manifest_path: harbor-agent-code.json
+      ref: e2b5a27d5791c47ffc8abe5e3c2acfdf32a8fb1f
+      repo_url: https://github.com/osolmaz/harbor-custom-harnesses.git
+      source_dir: harnesses/pi-code-mode
+  model_name: openai/deepseek-ai/DeepSeek-V4.1-Flash:novita
+  name: acp
+  override_setup_timeout_sec: 1800
+datasets:
+- path: tasks
+  repo: https://github.com/harbor-framework/terminal-bench-2-1.git@d49e28f1e4ddd13d289e85a5f312a66750951932

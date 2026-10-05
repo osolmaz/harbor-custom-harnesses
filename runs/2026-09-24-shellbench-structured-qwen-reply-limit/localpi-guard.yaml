@@ -1,0 +1,33 @@
+# Harbor job config for localpi-guard, from the Harbor-HF run record run-1a21d892f07ffce87dda3aab.
+# The agent source keeps the pin that ran. `jobs_dir` is left out because it was a
+# Harbor-HF host path.
+# Replaced or removed private values: the private ShellBench dataset repository and revision in `repo`; they are in the run record; `task_names`, because the 6 selected ShellBench tasks are private. As written, this config selects all tasks; the names are in the run record.
+job_name: job
+n_attempts: 1
+n_concurrent_trials: 3
+agent_setup_timeout_multiplier: 3
+retry:
+  max_retries: 0
+environment:
+  env: {}
+  import_path: harbor_hf_agents.hf_sandbox:LabeledHFSandboxEnvironment
+  kwargs:
+    flavor: cpu-basic
+    job_timeout: none
+    run_label: run-1a21d892f07ffce87dda3aab
+agents:
+- env:
+    OPENAI_API_KEY: ${HF_INFERENCE_TOKEN}
+    OPENAI_BASE_URL: https://router.huggingface.co/v1
+  kwargs:
+    source:
+      manifest_path: harbor-agent-limit-localpi.json
+      ref: fbcb9c645dd814129e4d18ac4f0527bab5466e0e
+      repo_url: https://github.com/osolmaz/harbor-custom-harnesses.git
+      source_dir: harnesses/localpi
+  model_name: openai/Qwen/Qwen3.8-27B:novita
+  name: acp
+  override_timeout_sec: 3600
+datasets:
+- path: tasks
+  repo: PRIVATE_SHELLBENCH_DATASET

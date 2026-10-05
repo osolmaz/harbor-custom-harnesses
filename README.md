@@ -197,6 +197,15 @@ enough by itself. Also confirm that `openclaw-source.json` has the pinned commit
 and that `openclaw-envelope.json` reports `codeModeEngaged` as false for the
 direct manifest and true for the Code Mode manifest.
 
+## Benchmark run records
+
+Each benchmark run has a dated folder under `runs/`, such as
+`runs/2026-09-26-shellbench-structured-bonsai-vs-qwen-int4/`. Inside it, each
+harness that the run used has its own folder with the manifest, the Python
+project, its lock, and the adapter source, next to the Harbor job config for
+that harness. The folder shows exactly what ran without an older checkout.
+See [the run record spec](docs/2026-10-05-benchmark-run-records-spec.md).
+
 ## Adding a harness
 
 Add another directory under `harnesses/` with its own native manifest and lock.
