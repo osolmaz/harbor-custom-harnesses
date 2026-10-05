@@ -26,5 +26,5 @@ These ran before the main runs, with other pins or manifests. They have no harne
 - The first main run started on 2026-09-24 (UTC).
 - Each job config is the run's own Harbor job config. Its agent source keeps the pin that ran, which points into `harnesses/` and not into this folder.
 - Each harness folder copies the files at that pin: the manifest, saved as `harbor-agent.json`, and `pyproject.toml` and `uv.lock` from `harnesses/`, the adapter source from `src/harbor_pi_code_mode/`, and the payload build inputs from `build/pi-code-mode/`. `build/wheel.json` holds the release wheel and the sha256 that `uv.lock` pins.
-- The adapter actually ran from inside that wheel, so `src/` is a record of the code the wheel was built from. To run this again, use the original pin.
+- The adapter actually ran from inside that wheel. `src/` is the source at the pin. The wheels were uploaded by hand, so nothing proves that the wheel was built from this source. To run this again, use the original pin.
 - The release tag for the rc6 wheel points to an older commit on `main`, not to the commit that built the wheel. The adapter source here comes from the pinned commit, which locks that wheel. It was not compared with the wheel's contents.

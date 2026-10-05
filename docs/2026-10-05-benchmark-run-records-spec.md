@@ -63,7 +63,7 @@ runs/
 
 1. Commit the harness folder first. Then write the job config with `ref` set to that commit, commit it, and launch from it.
 2. Do not change a harness folder or a job config after a launch. A fix goes in a new harness folder or a new run folder. Only `README.md` gets later additions, such as run IDs and status.
-3. Keep credentials, local paths, and private values out. This repository is public, and it must stay public because Harbor-HF fetches harness sources without credentials.
+3. Keep credentials, local paths, and private values out. This repository is public. It was made public on 2026-09-08 so that Harbor-HF can fetch harness sources without a credential; this spec does not re-check that need.
    - Put keys and private endpoints in the agent `env` as `${VAR}` references. Harbor resolves these from the launch environment.
    - Harbor does not resolve `${VAR}` in `model_name`. A run whose model name is not yet public is recorded here only after the name becomes public.
    - Name datasets by registry name and version, or by repository and full revision. Never use a local path.
@@ -85,7 +85,7 @@ A repository check enforces these rules for every change under `runs/`:
 Past runs are added with the same layout, with two differences:
 
 - The job config keeps the pin that actually ran. That pin points into `harnesses/` at an older commit, not into the run folder.
-- The harness folder is a copy of the files at that commit: the manifest and project from `harnesses/<harness>/`, and the adapter source from `src/` or `runtimes/`. At that time the adapter ran from inside the released wheel, so the copied source is a record of what the wheel was built from. To run a past run again, use its original pin. The README marks the folder as a reconstruction and names the source commit.
+- The harness folder is a copy of the files at that commit: the manifest and project from `harnesses/<harness>/`, and the adapter source from `src/` or `runtimes/`. At that time the adapter ran from inside the released wheel. The copied source is the source at the pin. The wheels were uploaded by hand, so nothing proves that a wheel was built from that source. To run a past run again, use its original pin. The README marks the folder as a reconstruction and names the source commit.
 
 The pins come from Harbor-HF run records in the run Bucket, from Harbor-HF presets, and from launch files. A past run is added only when its pin can be found. Earlier probes that used other pins are listed in the README without a harness folder.
 
