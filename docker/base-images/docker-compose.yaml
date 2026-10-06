@@ -1,0 +1,8 @@
+services:
+  python-3-14:
+    image: ghcr.io/osolmaz/harbor-hf-customization/python-3-14:20261006
+    build:
+      context: python-3-14
+      platforms:
+        - linux/amd64
+        - linux/arm64

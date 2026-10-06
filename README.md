@@ -206,6 +206,23 @@ project, its lock, and the adapter source, next to the Harbor job config for
 that harness. The folder shows exactly what ran without an older checkout.
 See [the run record spec](docs/2026-10-05-benchmark-run-records-spec.md).
 
+## Benchmark base images
+
+`docker/base-images/` holds shared base images for benchmark tasks, built for `linux/amd64` and
+`linux/arm64`. `python-3-14` is Python 3.14 on Debian slim with the command-line tools and Python
+libraries that ShellBench tasks use; the exact packages are in its Dockerfile.
+
+A task names the image as its prebuilt environment, so it needs no Dockerfile of its own; Harbor
+uploads the task's `environment/` directory to `/app`:
+
+```toml
+[environment]
+docker_image = "ghcr.io/osolmaz/harbor-hf-customization/python-3-14:<tag>"
+```
+
+Tags are dates. A GitHub release tagged `base-images-<tag>` publishes the images named in
+`docker/base-images/docker-compose.yaml`.
+
 ## Adding a harness
 
 Add another directory under `harnesses/` with its own native manifest and lock.
