@@ -1,0 +1,10 @@
+[project]
+name = "harbor-hermes-acp-source"
+version = "0.1.0rc1"
+requires-python = ">=3.12"
+dependencies = [
+    "harbor-hermes-acp-runtime @ git+https://github.com/osolmaz/harbor-hf-customization.git@0d2092ef65b5b3c63cab6ad586f9d5b7b966fa49#subdirectory=runtimes/hermes-acp",
+]
+
+[tool.uv]
+environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]

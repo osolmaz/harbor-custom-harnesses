@@ -20,6 +20,7 @@ jobs:
       - run: uv lock --check --project harnesses/openclaw-native
       - run: uv lock --check --project runtimes/openclaw-native
       - run: uv sync --project runtimes/openclaw-native --all-groups --locked
+      - run: uv lock --check --project harnesses/hermes-acp
       - run: uv lock --check --project runtimes/hermes-acp
       - run: uv sync --project runtimes/hermes-acp --all-groups --locked
       - run: sh -n tests/canary/code-mode/tests/test.sh

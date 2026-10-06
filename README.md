@@ -197,6 +197,26 @@ enough by itself. Also confirm that `openclaw-source.json` has the pinned commit
 and that `openclaw-envelope.json` reports `codeModeEngaged` as false for the
 direct manifest and true for the Code Mode manifest.
 
+## Hermes ACP runtime
+
+The Hermes harness runs Hermes Agent release `v2026.9.24` (commit
+`f97608f178d1ffeca59860195ab7da295f7c8e5f`) through its native `hermes-acp` server.
+Hermes builds no wheel, and Harbor's built-in Hermes agent installs every version with
+the installer from Hermes's main branch, which no longer supports release trees. The
+runtime therefore clones the pinned tag, rejects any other commit, and installs it with
+the release's own lockfile (`uv sync --extra all --locked` on Python 3.11), as the
+release installer does. Install output goes to standard error, because standard output
+carries ACP.
+
+The runtime accepts only the Hugging Face router and an explicit `model:provider`. It
+writes a fresh Hermes home that pins that model on Hermes's `huggingface` provider and
+passes the router credential as `HF_TOKEN`. Hermes rejects Harbor's model-switch
+request, because Hermes validates the name without the provider suffix; Harbor records
+the rejection, and the session keeps the pinned model. Hermes reports token counts but
+no USD cost, so a run's cost ceiling cannot stop it; watch its token use. After the
+agent exits, the runtime copies Hermes's session records into the agent logs, without
+symbolic links.
+
 ## Benchmark run records
 
 Each benchmark run has a dated folder under `runs/`, such as
