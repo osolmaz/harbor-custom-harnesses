@@ -31,3 +31,13 @@ jobs:
           files: docker-compose.yaml
           set: "*.platform=linux/amd64"
           push: false
+          load: true
+
+      - name: Check the image payload
+        run: |
+          image=$(cd docker/base-images && docker buildx bake --print | jq -r '.target[].tags[0]')
+          docker run --rm "$image" sh -euc '
+            python3 -c "import docx, httpx, openpyxl, pandas, pdfplumber, pptx, pypdf, pytest, reportlab, requests, yaml"
+            for tool in git jq node npm pdftotext rg tesseract unzip zip; do command -v "$tool" >/dev/null; done
+            node -e "require(\"playwright\").chromium.launch().then(async (b) => { const p = await b.newPage(); await p.setContent(\"<p id=x>ok</p>\"); if (await p.textContent(\"#x\") !== \"ok\") process.exit(1); await b.close(); })"
+          '
