@@ -36,3 +36,11 @@ RUN pip install --no-cache-dir \
     pyyaml==6.0.3 \
     reportlab==5.0.1 \
     requests==2.34.2
+
+# Browser automation for tasks that drive a web page: Playwright with its Chromium build and
+# system libraries. NODE_PATH lets task code require("playwright") without a local install.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV NODE_PATH=/usr/local/lib/node_modules
+RUN npm install -g playwright@1.63.0 \
+    && playwright install --with-deps chromium \
+    && rm -rf /var/lib/apt/lists/* /root/.npm
