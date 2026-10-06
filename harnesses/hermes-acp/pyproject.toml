@@ -1,9 +1,9 @@
 [project]
 name = "harbor-hermes-acp-source"
-version = "0.1.0rc1"
+version = "0.1.0rc2"
 requires-python = ">=3.12"
 dependencies = [
-    "harbor-hermes-acp-runtime @ git+https://github.com/osolmaz/harbor-hf-customization.git@0d2092ef65b5b3c63cab6ad586f9d5b7b966fa49#subdirectory=runtimes/hermes-acp",
+    "harbor-hermes-acp-runtime @ git+https://github.com/osolmaz/harbor-hf-customization.git@2b7bad8f0d5586cbdf827781965d2a6aae68846e#subdirectory=runtimes/hermes-acp",
 ]
 
 [tool.uv]

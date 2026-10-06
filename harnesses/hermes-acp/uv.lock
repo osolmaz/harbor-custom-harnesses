@@ -10,22 +10,22 @@ supported-markers = [
 
 [[package]]
 name = "harbor-hermes-acp-runtime"
-version = "0.1.0rc1"
-source = { git = "https://github.com/osolmaz/harbor-hf-customization.git?subdirectory=runtimes%2Fhermes-acp&rev=0d2092ef65b5b3c63cab6ad586f9d5b7b966fa49#0d2092ef65b5b3c63cab6ad586f9d5b7b966fa49" }
+version = "0.1.0rc2"
+source = { git = "https://github.com/osolmaz/harbor-hf-customization.git?subdirectory=runtimes%2Fhermes-acp&rev=2b7bad8f0d5586cbdf827781965d2a6aae68846e#2b7bad8f0d5586cbdf827781965d2a6aae68846e" }
 dependencies = [
     { name = "uv" },
 ]
 
 [[package]]
 name = "harbor-hermes-acp-source"
-version = "0.1.0rc1"
+version = "0.1.0rc2"
 source = { virtual = "." }
 dependencies = [
     { name = "harbor-hermes-acp-runtime" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "harbor-hermes-acp-runtime", git = "https://github.com/osolmaz/harbor-hf-customization.git?subdirectory=runtimes%2Fhermes-acp&rev=0d2092ef65b5b3c63cab6ad586f9d5b7b966fa49" }]
+requires-dist = [{ name = "harbor-hermes-acp-runtime", git = "https://github.com/osolmaz/harbor-hf-customization.git?subdirectory=runtimes%2Fhermes-acp&rev=2b7bad8f0d5586cbdf827781965d2a6aae68846e" }]
 
 [[package]]
 name = "uv"
