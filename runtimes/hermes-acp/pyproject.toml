@@ -1,0 +1,56 @@
+[project]
+name = "harbor-hermes-acp-runtime"
+version = "0.1.0rc1"
+description = "Pinned Hermes Agent release served to Harbor through its native ACP server"
+requires-python = ">=3.12"
+license = "MIT"
+dependencies = ["uv==0.12.5"]
+
+[project.scripts]
+harbor-hermes-acp = "harbor_hermes_acp.launcher:main"
+
+[build-system]
+requires = ["hatchling==1.32.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/harbor_hermes_acp"]
+
+[dependency-groups]
+dev = [
+    "ruff",
+    "ty",
+    "pytest",
+    "pytest-cov",
+    "pip-audit",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C90", "ANN"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 8
+
+[tool.ty.rules]
+all = "error"
+missing-type-argument = "error"
+possibly-missing-attribute = "error"
+possibly-unresolved-reference = "error"
+possibly-missing-import = "error"
+
+[tool.ty.terminal]
+error-on-warning = true
+
+[tool.ty.analysis]
+respect-type-ignore-comments = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=harbor_hermes_acp --cov-branch --cov-fail-under=85"
+
+[tool.coverage.run]
+source = ["harbor_hermes_acp"]

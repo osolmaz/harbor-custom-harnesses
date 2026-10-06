@@ -60,7 +60,7 @@ error-on-warning = true
 respect-type-ignore-comments = false
 
 [tool.ty.src]
-exclude = ["runtimes/openclaw-native"]
+exclude = ["runtimes/openclaw-native", "runtimes/hermes-acp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
