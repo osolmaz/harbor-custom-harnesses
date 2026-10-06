@@ -1,4 +1,3 @@
-import subprocess
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -172,21 +171,20 @@ def test_main_runs_hermes_acp_and_saves_sessions(
     monkeypatch.setattr(launcher, "AGENT_LOGS", logs)
     entry = tmp_path / "hermes-acp"
     monkeypatch.setattr(launcher, "install", lambda root: entry)
-    seen: list[tuple[list[str], dict[str, str]]] = []
+    seen: list[tuple[list[str], dict[str, str], str]] = []
 
-    def fake_run(
-        args: list[str], env: dict[str, str]
-    ) -> subprocess.CompletedProcess[str]:
-        seen.append((args, env))
+    async def fake_serve(command: list[str], env: dict[str, str], model: str) -> int:
+        seen.append((command, env, model))
         (Path(env["HERMES_HOME"]) / "state.db").write_text("db")
-        return subprocess.CompletedProcess(args, 3)
+        return 3
 
-    monkeypatch.setattr(launcher.subprocess, "run", fake_run)
+    monkeypatch.setattr(launcher, "serve", fake_serve)
     with pytest.raises(SystemExit) as exit_info:
         launcher.main()
     assert exit_info.value.code == 3
-    args, env = seen[0]
+    args, env, selected = seen[0]
     assert args == [str(entry)]
+    assert selected == f"openai/{MODEL}"
     home = Path(env["HERMES_HOME"])
     assert home == tmp_path / ".harbor-hermes" / launcher.HERMES_COMMIT / "home"
     assert (home / "config.yaml").read_text() == launcher.hermes_config(MODEL)

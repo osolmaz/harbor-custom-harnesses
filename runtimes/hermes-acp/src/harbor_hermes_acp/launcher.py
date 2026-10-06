@@ -2,11 +2,12 @@
 
 Hermes builds no wheel; its release installs from a checkout with the release's own
 uv lockfile. This launcher repeats those steps for one pinned commit, configures the
-Hugging Face router route that Harbor requested, and runs ``hermes-acp`` on the
-inherited standard streams. Install output goes to standard error, because standard
-output carries the ACP messages.
+Hugging Face router route that Harbor requested, and relays ACP between Harbor and
+``hermes-acp``. Install output goes to standard error, because standard output carries
+the ACP messages.
 """
 
+import asyncio
 import json
 import os
 import shutil
@@ -16,6 +17,8 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 from uv import find_uv_bin
+
+from harbor_hermes_acp.relay import serve
 
 HERMES_REPO = "https://github.com/NousResearch/hermes-agent.git"
 HERMES_TAG = "v2026.9.24"
@@ -144,7 +147,8 @@ def main() -> None:
     home = root / "home"
     home.mkdir(parents=True, exist_ok=True)
     (home / "config.yaml").write_text(hermes_config(model))
-    code = subprocess.run([str(entry)], env=child_env(env, home)).returncode
+    selected = env["HARBOR_ACP_REQUESTED_MODEL"]
+    code = asyncio.run(serve([str(entry)], child_env(env, home), selected))
     if AGENT_LOGS.is_dir():
         save_sessions(home, AGENT_LOGS / "hermes")
     sys.exit(code)

@@ -210,9 +210,11 @@ carries ACP.
 
 The runtime accepts only the Hugging Face router and an explicit `model:provider`. It
 writes a fresh Hermes home that pins that model on Hermes's `huggingface` provider and
-passes the router credential as `HF_TOKEN`. Hermes rejects Harbor's model-switch
-request, because Hermes validates the name without the provider suffix; Harbor records
-the rejection, and the session keeps the pinned model. Hermes reports token counts but
+passes the router credential as `HF_TOKEN`. Harbor's ACP runner selects the model
+through a session config option, which Hermes does not offer, so the runtime relays ACP
+between Harbor and Hermes: it adds one `model` option that holds the pinned model to each
+new session and accepts only that model. Every other message passes through unchanged.
+Hermes reports token counts but
 no USD cost, so a run's cost ceiling cannot stop it; watch its token use. After the
 agent exits, the runtime copies Hermes's session records into the agent logs, without
 symbolic links.
