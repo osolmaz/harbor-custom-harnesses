@@ -1,14 +1,19 @@
 """Pinned native Harbor adapters for the ShellBench benchmark runs.
 
-The adapters are copied from the reviewed harbor-config run folder
-`runs/2026-10-05-shellbench-preliminary` and build on Harbor at the pinned
+The `shellbench_pi`, `shellbench_openclaw`, and `shellbench_hermes` modules are
+verbatim copies of the reviewed harbor-config adapters at
+`runs/2026-10-05-shellbench-preliminary`, kept 1-1 by
+`scripts/sync_shellbench_adapters.py`. They build on Harbor at the pinned
 upstream commit 3c823808, the revision the Harbor-HF launch contract checks.
-Each adapter attests the installed agent version at setup time; see
-`attestation.py`.
+
+The Harbor-HF agent presets use the attested wrappers from
+`shellbench_adapters.attested`, which add build attestation and nothing else.
 """
 
-from shellbench_adapters.shellbench_hermes import ShellBenchHermes
-from shellbench_adapters.shellbench_openclaw import ShellBenchOpenClaw
-from shellbench_adapters.shellbench_pi import ShellBenchPi
+from shellbench_adapters.attested import (
+    ShellBenchHermes,
+    ShellBenchOpenClaw,
+    ShellBenchPi,
+)
 
 __all__ = ["ShellBenchHermes", "ShellBenchOpenClaw", "ShellBenchPi"]

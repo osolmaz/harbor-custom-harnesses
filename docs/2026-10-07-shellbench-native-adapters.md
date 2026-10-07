@@ -36,7 +36,11 @@ commit, and the package tests run against exactly that revision.
 1. **Adapter wheel.** `packages/shellbench-adapters` builds the pure-Python wheel
    `harbor_shellbench_adapters`. It declares no runtime dependencies: Harbor comes from
    the parent image, so installing the wheel can never move the Harbor revision the launch
-   contract checks. The dev group pins the same upstream commit for the tests.
+   contract checks. The dev group pins the same upstream commit for the tests. The three
+   adapter modules are verbatim copies of the harbor-config run folder, kept 1-1 by
+   `scripts/sync_shellbench_adapters.py`; CI fails on drift. The only added code is the
+   `attested.py` wrapper module, which overrides `setup()` to attest the build, and the
+   attestation helper itself.
 2. **Derived parent image.** `build/shellbench-parent/Dockerfile` starts from the reviewed
    parent image at its exact digest, installs the pinned wheel into
    `/opt/harbor-hf-parent`, verifies the three adapter classes import, and stops. The
@@ -54,9 +58,10 @@ commit, and the package tests run against exactly that revision.
    The presets do not embed prices; cost is computed from the run submission's pricing
    block, so one price record per route stays in the submission, where the operator can
    check it.
-4. **Build attestation.** `shellbench_adapters.attestation` runs the agent's version
-   command as a real request during `setup()`, compares the parsed version with the pin,
-   writes `attestation.json` into the agent logs, and fails the trial on any mismatch or
+4. **Build attestation.** The `attested.py` wrappers call
+   `shellbench_adapters.attestation` during `setup()`: it runs the agent's version
+   command as a real request, compares the parsed version with the pin, writes
+   `attestation.json` into the agent logs, and fails the trial on any mismatch or
    missing pin. Harbor's native version detection is best-effort and does not compare;
    this is the control that makes the wrong-build failure mode impossible to repeat
    silently.

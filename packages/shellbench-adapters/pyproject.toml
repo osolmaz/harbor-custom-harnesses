@@ -53,6 +53,14 @@ source = ["shellbench_adapters"]
 [tool.ruff]
 line-length = 88
 target-version = "py312"
+# The three copied adapter modules are verbatim 1-1 copies of the harbor-config
+# source, restored by scripts/sync_shellbench_adapters.py. Formatting them would
+# break the sync, so they stay outside ruff entirely.
+extend-exclude = [
+  "src/shellbench_adapters/shellbench_pi.py",
+  "src/shellbench_adapters/shellbench_openclaw.py",
+  "src/shellbench_adapters/shellbench_hermes.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "ANN", "C90"]

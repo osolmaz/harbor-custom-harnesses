@@ -1,9 +1,5 @@
 """ShellBench's OpenClaw adapter, built on Harbor's adapter at the pinned commit.
 
-This copy runs on upstream harbor-framework/harbor@3c823808, the revision the
-Harbor-HF launch contract pins, and adds build attestation: setup fails unless
-the installed `openclaw --version` equals the pinned version.
-
 Harbor's adapter needs seven changes for these runs:
 
 - The runtime is explicit. OpenClaw otherwise picks one itself.
@@ -14,9 +10,9 @@ Harbor's adapter needs seven changes for these runs:
   test the HF router rejected that request, so the PDF tool failed, and on an OpenAI
   endpoint a different model would read the PDF. The image tool falls back the same way.
 - Code mode is on unless the job config turns it off.
-- A custom endpoint gets a model entry with the provider's own model ID.
-  Harbor's adapter registers the model under its Harbor name, with the provider
-  prefix, which OpenClaw cannot resolve.
+- A custom endpoint gets a model entry with the provider's own model ID. Harbor's adapter
+  registers the model under its Harbor name, with the provider prefix, which OpenClaw
+  cannot resolve.
 - That entry asks the stream for usage and carries the job config's prices, so OpenClaw
   reports tokens and cost.
 - Install retries a few times. In 8 OpenClaw installs on 2026-10-05, npm reset the
@@ -30,8 +26,6 @@ from harbor.agents.installed.base import NonZeroAgentExitCodeError
 from harbor.agents.installed.openclaw import OpenClaw, OpenClawOptions
 from harbor.environments.base import BaseEnvironment
 from pydantic import BaseModel, Field
-
-from shellbench_adapters.attestation import attest_version
 
 INSTALL_ATTEMPTS = 3
 INSTALL_RETRY_DELAY_SEC = 15
@@ -48,19 +42,13 @@ class ModelPrice(BaseModel):
 
 class ShellBenchOpenClawOptions(OpenClawOptions):
     runtime: Literal["openclaw", "codex"] = Field(
-        description=(
-            "OpenClaw agent runtime: codex for OpenAI models, openclaw otherwise."
-        )
+        description="OpenClaw agent runtime: codex for OpenAI models, openclaw otherwise."
     )
-    code_mode: bool = Field(
-        default=True, description="OpenClaw code mode for this model."
-    )
+    code_mode: bool = Field(default=True, description="OpenClaw code mode for this model.")
     model_api: Literal["openai-completions", "openai-responses"] | None = Field(
         default=None, description="Wire API of a custom endpoint."
     )
-    price: ModelPrice | None = Field(
-        default=None, description="Prices for cost reporting."
-    )
+    price: ModelPrice | None = Field(default=None, description="Prices for cost reporting.")
     context_window: int | None = Field(default=None, ge=1)
     max_output_tokens: int | None = Field(default=None, ge=1)
 
@@ -78,15 +66,8 @@ class ShellBenchOpenClaw(OpenClaw):
             except NonZeroAgentExitCodeError:
                 if attempt == INSTALL_ATTEMPTS:
                     raise
-                self.logger.warning(
-                    f"OpenClaw install attempt {attempt} failed; retrying"
-                )
+                self.logger.warning(f"OpenClaw install attempt {attempt} failed; retrying")
                 await asyncio.sleep(INSTALL_RETRY_DELAY_SEC * attempt)
-
-    @override
-    async def setup(self, environment: BaseEnvironment) -> None:
-        await super().setup(environment)
-        await attest_version(self, environment, "openclaw")
 
     @override
     def _build_full_openclaw_config(self) -> dict[str, Any]:

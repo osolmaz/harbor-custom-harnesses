@@ -32,6 +32,7 @@ jobs:
       - run: uv run --project runtimes/openclaw-native ty check --project runtimes/openclaw-native
       - run: uv run --project runtimes/openclaw-native pytest runtimes/openclaw-native/tests
       - run: uv run --project runtimes/openclaw-native pip-audit
+      - run: uv run --project packages/shellbench-adapters python scripts/sync_shellbench_adapters.py --check
       - run: uv lock --check --project packages/shellbench-adapters
       - run: uv run --project packages/shellbench-adapters ruff check packages/shellbench-adapters
       - run: uv run --project packages/shellbench-adapters ruff format --check packages/shellbench-adapters

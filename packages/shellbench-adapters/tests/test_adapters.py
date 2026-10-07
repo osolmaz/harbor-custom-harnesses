@@ -12,6 +12,15 @@ from harbor.agents.installed.base import (
 from harbor.models.agent.context import AgentContext
 
 from shellbench_adapters import shellbench_hermes, shellbench_openclaw, shellbench_pi
+from shellbench_adapters.attested import (
+    ShellBenchHermes as AttestedHermes,
+)
+from shellbench_adapters.attested import (
+    ShellBenchOpenClaw as AttestedOpenClaw,
+)
+from shellbench_adapters.attested import (
+    ShellBenchPi as AttestedPi,
+)
 from shellbench_adapters.shellbench_hermes import (
     ModelPrice,
     ShellBenchHermes,
@@ -316,7 +325,13 @@ async def test_pi_setup_attests_the_installed_version(
         return None
 
     monkeypatch.setattr(shellbench_pi.Pi, "install", ok_install)
-    agent = pi(tmp_path)
+    agent = AttestedPi(
+        logs_dir=tmp_path,
+        model_name=MODEL,
+        extra_env=ENV,
+        version="1.0.2",
+        model_api="openai-completions",
+    )
     await agent.setup(AttestEnvironment("1.0.2\n"))  # ty: ignore[invalid-argument-type]
     evidence = json.loads((tmp_path / "attestation.json").read_text())
     assert evidence["attested_version"] == "1.0.2"
@@ -325,7 +340,13 @@ async def test_pi_setup_attests_the_installed_version(
 async def test_hermes_setup_attests_the_installed_version(
     tmp_path: Path, monkeypatch
 ) -> None:
-    agent = hermes(tmp_path)
+    agent = AttestedHermes(
+        logs_dir=tmp_path,
+        model_name=MODEL,
+        extra_env=ENV,
+        version="v2026.9.24",
+        model_api="openai-completions",
+    )
     agent.ensure_system_dependencies = AsyncMock()
     agent.exec_as_agent = AsyncMock()
     await agent.setup(AttestEnvironment("v2026.9.24\n"))  # ty: ignore[invalid-argument-type]
@@ -340,7 +361,14 @@ async def test_openclaw_setup_fails_on_a_wrong_installed_version(
         return None
 
     monkeypatch.setattr(shellbench_openclaw.OpenClaw, "install", ok_install)
-    agent = openclaw(tmp_path)
+    agent = AttestedOpenClaw(
+        logs_dir=tmp_path,
+        model_name=MODEL,
+        extra_env=ENV,
+        version="2026.9.8",
+        runtime="openclaw",
+        model_api="openai-completions",
+    )
     with pytest.raises(RuntimeError, match="attested version .* != pinned"):
         await agent.setup(AttestEnvironment("2026.9.5\n"))  # ty: ignore[invalid-argument-type]
 

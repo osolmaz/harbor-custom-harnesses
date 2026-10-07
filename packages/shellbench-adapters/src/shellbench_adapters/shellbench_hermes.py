@@ -1,21 +1,16 @@
 """ShellBench's Hermes adapter, built on Harbor's adapter at the pinned commit.
 
-This copy runs on upstream harbor-framework/harbor@3c823808, the revision the
-Harbor-HF launch contract pins, and adds build attestation: setup fails unless
-the installed `hermes --version` equals the pinned version.
-
 Harbor's adapter needs five changes for Hermes v2026.9.24:
 
-- Install with the installer from the pinned tag. Harbor downloads it from
-  main, and that installer needs a pm/ package that this tag does not have.
+- Install with the installer from the pinned tag. Harbor downloads it from main, and that
+  installer needs a pm/ package that this tag does not have.
 - Check the version with `hermes --version`. This release removed `hermes version`.
-- Send a custom endpoint chat completions through Hermes's custom provider.
-  Harbor's adapter selects the openai-api provider, which uses the Responses
-  API. On that route, Hermes recorded 0 tokens in the smoke test; whether the
-  router sent no usage or Hermes did not read it was not checked.
+- Send a custom endpoint chat completions through Hermes's custom provider. Harbor's
+  adapter selects the openai-api provider, which uses the Responses API. On that route,
+  Hermes recorded 0 tokens in the smoke test; whether the router sent no usage or Hermes
+  did not read it was not checked.
 - Read tokens from Hermes's usage table, `session_model_usage` in `state.db`. It has one
-  row per session, model, and task: the main loop, side calls such as
-  compression and title
+  row per session, model, and task: the main loop, side calls such as compression and title
   generation, subagent sessions, and the sessions that compression starts. The session
   row that `hermes sessions export` writes leaves out side calls, and the export leaves
   out subagent sessions. The adapter prices the totals with the job config's rates.
@@ -38,46 +33,30 @@ from harbor.environments.base import BaseEnvironment
 from harbor.models.agent.context import AgentContext
 from pydantic import BaseModel, Field
 
-from shellbench_adapters.attestation import attest_version
-
 INSTALLER = "https://raw.githubusercontent.com/NousResearch/hermes-agent/{ref}/scripts/install.sh"
 HERMES_HOME = "/tmp/hermes"
 SESSION_LOG = "/logs/agent/hermes-session.jsonl"
 USAGE_LOG = "/logs/agent/hermes-usage.json"
-USAGE_FIELDS = (
-    "input_tokens",
-    "cache_read_tokens",
-    "cache_write_tokens",
-    "output_tokens",
-)
-# Runs with Hermes's own Python, next to the hermes launcher in its venv, because
-# the task image may have no Python. A failure leaves no usage file, and tokens
-# stay unknown.
+USAGE_FIELDS = ("input_tokens", "cache_read_tokens", "cache_write_tokens", "output_tokens")
+# Runs with Hermes's own Python, next to the hermes launcher in its venv, because the
+# task image may have no Python. A failure leaves no usage file, and tokens stay unknown.
 DUMP_USAGE = f"""
 export PATH="$HOME/.local/bin:$PATH"
 py="$(dirname "$(readlink -f "$(command -v hermes)")")/python"
-"$py" - > {USAGE_LOG}.tmp << 'PYEOF' && \
-  mv {USAGE_LOG}.tmp {USAGE_LOG} || \
-  rm -f {USAGE_LOG}.tmp
+"$py" - > {USAGE_LOG}.tmp << 'PYEOF' && mv {USAGE_LOG}.tmp {USAGE_LOG} || rm -f {USAGE_LOG}.tmp
 import json, sqlite3
 con = sqlite3.connect("file:{HERMES_HOME}/state.db?mode=ro", uri=True)
 con.row_factory = sqlite3.Row
 rows = con.execute(
-    "SELECT session_id, task, model, billing_provider, "
-    "SUM(api_call_count) AS api_calls, "
-    "SUM(input_tokens) AS input_tokens, "
-    "SUM(cache_read_tokens) AS cache_read_tokens, "
-    "SUM(cache_write_tokens) AS cache_write_tokens, "
-    "SUM(output_tokens) AS output_tokens "
+    "SELECT session_id, task, model, billing_provider, SUM(api_call_count) AS api_calls, "
+    "SUM(input_tokens) AS input_tokens, SUM(cache_read_tokens) AS cache_read_tokens, "
+    "SUM(cache_write_tokens) AS cache_write_tokens, SUM(output_tokens) AS output_tokens "
     "FROM session_model_usage GROUP BY session_id, task, model, billing_provider"
 )
 print(json.dumps([dict(row) for row in rows]))
 PYEOF
 """
-API_MODES = {
-    "openai-completions": "chat_completions",
-    "openai-responses": "codex_responses",
-}
+API_MODES = {"openai-completions": "chat_completions", "openai-responses": "codex_responses"}
 INSTALL_ATTEMPTS = 3
 INSTALL_RETRY_DELAY_SEC = 15
 
@@ -92,15 +71,11 @@ class ModelPrice(BaseModel):
 
 
 class ShellBenchHermesOptions(HermesOptions):
-    code_mode: bool = Field(
-        default=True, description="Keep Hermes's execute_code tool."
-    )
+    code_mode: bool = Field(default=True, description="Keep Hermes's execute_code tool.")
     model_api: Literal["openai-completions", "openai-responses"] = Field(
         description="Wire API of the custom endpoint."
     )
-    price: ModelPrice | None = Field(
-        default=None, description="Prices for cost reporting."
-    )
+    price: ModelPrice | None = Field(default=None, description="Prices for cost reporting.")
 
 
 class ShellBenchHermes(Hermes):
@@ -110,11 +85,6 @@ class ShellBenchHermes(Hermes):
     @override
     def get_version_command(self) -> str | None:
         return 'export PATH="$HOME/.local/bin:$PATH"; hermes --version'
-
-    @override
-    async def setup(self, environment: BaseEnvironment) -> None:
-        await super().setup(environment)
-        await attest_version(self, environment, "hermes")
 
     @override
     async def install(self, environment: BaseEnvironment) -> None:
@@ -127,16 +97,12 @@ class ShellBenchHermes(Hermes):
             except NonZeroAgentExitCodeError:
                 if attempt == INSTALL_ATTEMPTS:
                     raise
-                self.logger.warning(
-                    f"Hermes install attempt {attempt} failed; retrying"
-                )
+                self.logger.warning(f"Hermes install attempt {attempt} failed; retrying")
                 await asyncio.sleep(INSTALL_RETRY_DELAY_SEC * attempt)
 
     async def _install_once(self, environment: BaseEnvironment) -> None:
         assert self._version is not None
-        await self.ensure_system_dependencies(
-            environment, ("curl", "git", "ripgrep", "xz")
-        )
+        await self.ensure_system_dependencies(environment, ("curl", "git", "ripgrep", "xz"))
         await self.exec_as_agent(
             environment,
             command=(
@@ -144,8 +110,7 @@ class ShellBenchHermes(Hermes):
                 f"curl -fsSL {INSTALLER.format(ref=self._version)} "
                 f"| bash -s -- --skip-setup --branch {shlex.quote(self._version)} && "
                 'export PATH="$HOME/.local/bin:$PATH" && '
-                f"mkdir -p {HERMES_HOME}/sessions {HERMES_HOME}/skills "
-                f"{HERMES_HOME}/memories && "
+                f"mkdir -p {HERMES_HOME}/sessions {HERMES_HOME}/skills {HERMES_HOME}/memories && "
                 "hermes --version"
             ),
         )
@@ -161,9 +126,7 @@ class ShellBenchHermes(Hermes):
         base_url = self._get_env("OPENAI_BASE_URL")
         if not base_url:
             raise ValueError("Set OPENAI_BASE_URL in the agent env")
-        config = yaml.safe_load(
-            self._build_config_yaml(self.model_name, self.options.max_turns)
-        )
+        config = yaml.safe_load(self._build_config_yaml(self.model_name, self.options.max_turns))
         config.pop("provider", None)
         config["model"] = {
             "provider": "custom",
@@ -189,10 +152,7 @@ class ShellBenchHermes(Hermes):
         }
         await self.exec_as_agent(
             environment,
-            command=(
-                f"mkdir -p {HERMES_HOME} && "
-                f"cat > {HERMES_HOME}/config.yaml << 'EOF'\n{config_yaml}EOF"
-            ),
+            command=f"mkdir -p {HERMES_HOME} && cat > {HERMES_HOME}/config.yaml << 'EOF'\n{config_yaml}EOF",
             env=env,
             timeout_sec=10,
         )
@@ -201,9 +161,7 @@ class ShellBenchHermes(Hermes):
             self._build_register_skills_command(),
         ):
             if command:
-                await self.exec_as_agent(
-                    environment, command=command, env=env, timeout_sec=10
-                )
+                await self.exec_as_agent(environment, command=command, env=env, timeout_sec=10)
         flags = self.build_cli_flags()
         run = (
             'export PATH="$HOME/.local/bin:$PATH" && '
@@ -217,8 +175,7 @@ class ShellBenchHermes(Hermes):
                 environment,
                 command=(
                     'export PATH="$HOME/.local/bin:$PATH" && '
-                    f"hermes sessions export {SESSION_LOG} --source oneshot "
-                    "2>/dev/null || true"
+                    f"hermes sessions export {SESSION_LOG} --source oneshot 2>/dev/null || true"
                 ),
                 env={"HERMES_HOME": HERMES_HOME},
                 timeout_sec=30,
@@ -232,16 +189,12 @@ class ShellBenchHermes(Hermes):
         context.cost_usd = None
         usage_path = self.logs_dir / "hermes-usage.json"
         if not usage_path.exists():
-            self.logger.warning(
-                "Hermes usage table was not exported; tokens are unknown"
-            )
+            self.logger.warning("Hermes usage table was not exported; tokens are unknown")
             return
         try:
             rows = json.loads(usage_path.read_text())
         except json.JSONDecodeError:
-            self.logger.warning(
-                "Hermes usage table export is not valid JSON; tokens are unknown"
-            )
+            self.logger.warning("Hermes usage table export is not valid JSON; tokens are unknown")
             return
         apply_usage_rows(context, rows, self.options.price)
 
@@ -251,13 +204,10 @@ def apply_usage_rows(
 ) -> None:
     """Sum Hermes's usage rows into Harbor's context.
 
-    Hermes keeps uncached input in input_tokens, apart from cache reads and
-    writes. Harbor counts all prompt tokens as input and the cache reads among
-    them as cached.
+    Hermes keeps uncached input in input_tokens, apart from cache reads and writes. Harbor
+    counts all prompt tokens as input and the cache reads among them as cached.
     """
-    totals = {
-        field: sum(int(row.get(field) or 0) for row in rows) for field in USAGE_FIELDS
-    }
+    totals = {field: sum(int(row.get(field) or 0) for row in rows) for field in USAGE_FIELDS}
     uncached = totals["input_tokens"]
     cache_read = totals["cache_read_tokens"]
     cache_write = totals["cache_write_tokens"]
@@ -278,9 +228,7 @@ def apply_usage_rows(
             "sessions": len({row.get("session_id") for row in rows}),
             "api_calls": sum(int(row.get("api_calls") or 0) for row in rows),
             "by_task": {
-                (row.get("task") or "main"): {
-                    field: row.get(field) for field in USAGE_FIELDS
-                }
+                (row.get("task") or "main"): {field: row.get(field) for field in USAGE_FIELDS}
                 for row in rows
             },
         },
