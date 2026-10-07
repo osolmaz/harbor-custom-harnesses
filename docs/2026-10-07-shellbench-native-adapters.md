@@ -76,9 +76,9 @@ path; the ShellBench presets stop referencing it.
 
 ## Smoke before spend
 
-One task (`003fed-walnut-frame-apology`), one trial per harness, on the
-`shellbench-one-task-1-trial` benchmark preset with DeepSeek V4.1 Flash, before any full
-run. A smoke passes only when the trial result records the attested version (`pi` 1.0.4,
+One task, one trial per harness, through the `shellbench-one-task-1-trial` benchmark
+preset with DeepSeek V4.1 Flash, before any full run. The preset names the task; no task
+content belongs in this repository. A smoke passes only when the trial result records the attested version (`pi` 1.0.4,
 OpenClaw `2026.9.8`, Hermes `v2026.9.24`), the `attestation.json` artifact is present, and
 the trial completes with a nonzero reward path or an explainable failure. Nothing beyond
 the smoke starts without the operator's budget approval.
