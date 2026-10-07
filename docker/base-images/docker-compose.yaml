@@ -1,6 +1,6 @@
 services:
   anonbench1:
-    image: ghcr.io/osolmaz/harbor-hf-customization/anonbench1:20261006
+    image: ghcr.io/osolmaz/harbor-hf-customization/anonbench1:20261007
     build:
       context: anonbench1
       platforms:

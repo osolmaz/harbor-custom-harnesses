@@ -210,7 +210,8 @@ See [the run record spec](docs/2026-10-05-benchmark-run-records-spec.md).
 
 `docker/base-images/` holds shared base images for benchmark tasks, built for `linux/amd64` and
 `linux/arm64`. `anonbench1` is Python 3.14 on Debian slim with the command-line tools and Python
-libraries that the anonbench1 tasks use; the exact packages are in its Dockerfile.
+libraries that the anonbench1 tasks use, and Playwright with Chromium for browser tasks; the
+exact packages are in its Dockerfile.
 
 A task names the image as its prebuilt environment, so it needs no Dockerfile of its own; Harbor
 uploads the task's `environment/` directory to `/app`:
