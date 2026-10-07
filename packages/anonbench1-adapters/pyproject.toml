@@ -1,0 +1,72 @@
+[project]
+name = "harbor-anonbench1-adapters"
+version = "0.1.0rc1"
+description = "Pinned native Harbor adapters for the Anonbench1 pi, OpenClaw, and Hermes runs"
+requires-python = ">=3.12"
+license = "MIT"
+# Runtime dependency note: harbor comes from the parent worker image, which pins
+# harbor-framework/harbor@3c823808 (the launch contract). The wheel declares no
+# dependencies so installing it can never move the Harbor revision the launch
+# contract checks. The dev group pins the same upstream commit for the tests.
+dependencies = []
+
+[build-system]
+requires = ["hatchling==1.32.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/anonbench1_adapters"]
+
+[dependency-groups]
+dev = [
+    "harbor @ git+https://github.com/harbor-framework/harbor.git@3c82380859d187957cfd5cd64802b076d9779550",
+    "agent-client-protocol==0.12.1",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "ruff",
+    "ty==0.0.59",
+    "hatchling==1.32.0",
+]
+
+[tool.ty.rules]
+all = "error"
+missing-type-argument = "error"
+possibly-missing-attribute = "error"
+possibly-unresolved-reference = "error"
+possibly-missing-import = "error"
+
+[tool.ty.terminal]
+error-on-warning = true
+
+[tool.ty.analysis]
+respect-type-ignore-comments = false
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers --cov=anonbench1_adapters --cov-branch --cov-fail-under=85"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["anonbench1_adapters"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+# The three copied adapter modules are verbatim 1-1 copies of the harbor-config
+# source, restored by scripts/sync_anonbench1_adapters.py. Formatting them would
+# break the sync, so they stay outside ruff entirely.
+extend-exclude = [
+  "src/anonbench1_adapters/anonbench1_pi.py",
+  "src/anonbench1_adapters/anonbench1_openclaw.py",
+  "src/anonbench1_adapters/anonbench1_hermes.py",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ANN", "C90"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 8
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["ANN"]
