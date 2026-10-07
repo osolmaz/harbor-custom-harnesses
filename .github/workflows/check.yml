@@ -32,6 +32,11 @@ jobs:
       - run: uv run --project runtimes/openclaw-native ty check --project runtimes/openclaw-native
       - run: uv run --project runtimes/openclaw-native pytest runtimes/openclaw-native/tests
       - run: uv run --project runtimes/openclaw-native pip-audit
+      - run: uv lock --check --project packages/shellbench-adapters
+      - run: uv run --project packages/shellbench-adapters ruff check packages/shellbench-adapters
+      - run: uv run --project packages/shellbench-adapters ruff format --check packages/shellbench-adapters
+      - run: uv run --project packages/shellbench-adapters ty check --project packages/shellbench-adapters
+      - run: uv run --project packages/shellbench-adapters pytest packages/shellbench-adapters/tests
       - name: Check the public Pi catalog contract without inference
         run: |
           uv run python - <<'PY'
