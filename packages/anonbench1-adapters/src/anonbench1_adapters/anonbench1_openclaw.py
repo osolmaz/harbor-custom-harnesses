@@ -22,6 +22,7 @@ Harbor's adapter needs seven changes for these runs:
 """
 
 import asyncio
+import json
 from typing import Any, Literal, override
 
 from anonbench1_adapters.anonbench1_pins import NODE_INSTALL, PinnedNodeRuntime, npm_guard, require_version
@@ -86,6 +87,28 @@ class Anonbench1OpenClaw(PinnedNodeRuntime, OpenClaw):
                     raise
                 self.logger.warning(f"OpenClaw install attempt {attempt} failed; retrying")
                 await asyncio.sleep(INSTALL_RETRY_DELAY_SEC * attempt)
+
+    @override
+    async def exec_as_agent(self, environment, command, **kwargs):  # noqa: ANN001, ANN202
+        # Harbor writes the merged config to the host logs dir and expects the
+        # container to see it as a bind mount. HF sandboxes upload instead of
+        # mounting, so deliver the file through the exec channel first.
+        if "openclaw.upload.json" in command and "cat >" not in command:
+            remote = (
+                f"{self._CONTAINER_LOGS_AGENT}/{self._UPLOAD_CONFIG_FILENAME}"
+            )
+            await super().exec_as_agent(
+                environment,
+                command=(
+                    f"mkdir -p {self._CONTAINER_LOGS_AGENT} && "
+                    "cat > "
+                    + remote
+                    + " << 'HARBOR_CONFIG_EOF'\n"
+                    + json.dumps(self._build_full_openclaw_config(), indent=2)
+                    + "\nHARBOR_CONFIG_EOF"
+                ),
+            )
+        return await super().exec_as_agent(environment, command=command, **kwargs)
 
     @override
     def _build_full_openclaw_config(self) -> dict[str, Any]:
