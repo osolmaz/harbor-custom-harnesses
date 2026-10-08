@@ -378,6 +378,9 @@ class Anonbench1Pi(PinnedNodeRuntime, Pi):
         if models_json is None:
             return None
         for provider in models_json["providers"].values():
+            # pi-ai adds stream_options to non-streaming requests unless the
+            # provider compat says otherwise; some routers reject that with 400.
+            provider["compat"] = {"supportsUsageInStreaming": False}
             for model in provider["models"]:
                 if self.options.context_window is not None:
                     model["contextWindow"] = self.options.context_window

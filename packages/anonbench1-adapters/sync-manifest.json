@@ -7,8 +7,8 @@
     "anonbench1_offline_task_helper.mjs": "94302af471b341dc93101515a77ceeda1b740dcb8e102f45474caea24faab931",
     "anonbench1_offline_tools.mjs": "465d16aff29c1b9d36a4645a5d2efc5be308c20e602ceef561e83c512c6dcc93",
     "anonbench1_openclaw.py": "5303dcd9f11ec10e7345e19189363462fdba5d1535db14f3c69a38ec71ba20e0",
-    "anonbench1_pi.py": "f77e48904bfc132d7c08e3cfcdf5975e90a5ed42362872d5fcfea98222aacb24",
+    "anonbench1_pi.py": "725add7c1a9372eea74b0cbc245a00bb563a972551e6d6f891376b52ba07a499",
     "anonbench1_pins.py": "e840d9d1757972bb10b122d3983a10f6c3471d84392903f8ffcf3fbf06739736"
   },
-  "source_revision": "3b3566011cd195397617909bb7ef9fd9d4023650"
+  "source_revision": "972f4d5ec52a89139aad614233c2eab1cc593904"
 }
