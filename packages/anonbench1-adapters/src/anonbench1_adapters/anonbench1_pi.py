@@ -50,7 +50,7 @@ from harbor.environments.base import BaseEnvironment
 from harbor.models.agent.context import AgentContext
 from harbor.models.task.config import NetworkMode
 from harbor.utils.trajectory_utils import format_trajectory_json
-from offline_pi import OfflinePiTools
+from anonbench1_adapters.anonbench1_offline_pi import OfflinePiTools
 from pydantic import BaseModel, Field
 
 DEFAULT_TOOLS = ("read", "bash", "edit", "write")
@@ -507,7 +507,7 @@ class Anonbench1Pi(PinnedNodeRuntime, Pi):
                 await transport.run_host(
                     [
                         str(runtime.host_node / "bin/node"),
-                        str(Path(__file__).with_name("offline_session.mjs")),
+                        str(Path(__file__).with_name("anonbench1_offline_session.mjs")),
                         str(config_path),
                     ],
                     env=env,

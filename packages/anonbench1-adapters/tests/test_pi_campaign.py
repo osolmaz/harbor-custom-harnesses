@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from harbor.models.task.config import MCPServerConfig
+from test_pins import offline_env
 
 from anonbench1_adapters import anonbench1_pi
 from anonbench1_adapters.anonbench1_pi import Anonbench1Pi
@@ -143,7 +144,7 @@ async def test_run_wires_mcp_and_max_turns_extensions(
         return None
 
     monkeypatch.setattr(Anonbench1Pi, "_check_required_mcp", ready)
-    await agent.run("task", "env", context=None)  # noqa: ARG001
+    await agent.run("task", offline_env(), context=None)
     commands = [
         call.kwargs["command"]
         for call in agent.exec_as_agent.call_args_list  # ty: ignore[unresolved-attribute]
@@ -158,7 +159,7 @@ async def test_run_rejects_a_wrong_version_before_any_command(
     agent = make_agent(tmp_path, version="1.0.2")
     mock_run_internals(agent, tmp_path, monkeypatch)
     with pytest.raises(ValueError, match="requires version"):
-        await agent.run("task", "env", context=None)  # noqa: ARG001
+        await agent.run("task", offline_env(), context=None)
     assert agent.exec_as_agent.await_count == 0  # ty: ignore[unresolved-attribute]
 
 

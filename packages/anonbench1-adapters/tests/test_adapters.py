@@ -10,6 +10,7 @@ from harbor.agents.installed.base import (
     NonZeroAgentExitCodeError,
 )
 from harbor.models.agent.context import AgentContext
+from test_pins import offline_env
 
 from anonbench1_adapters import anonbench1_hermes, anonbench1_openclaw, anonbench1_pi
 from anonbench1_adapters.anonbench1_hermes import (
@@ -146,7 +147,7 @@ async def test_pi_install_retries_a_network_failure(
         side_effect=[NetworkConnectionError("npm error network"), None]
     )
     monkeypatch.setattr(anonbench1_pi, "INSTALL_RETRY_DELAY_SEC", 0)
-    await agent.install(environment="env")  # ty: ignore[invalid-argument-type]
+    await agent.install(environment=offline_env())  # ty: ignore[invalid-argument-type]
     assert agent.exec_as_agent.await_count == 2
 
 
@@ -278,7 +279,7 @@ async def test_openclaw_install_retries_then_succeeds(
         ]
     )
     monkeypatch.setattr(anonbench1_openclaw, "INSTALL_RETRY_DELAY_SEC", 0)
-    await agent.install(environment="env")  # ty: ignore[invalid-argument-type]
+    await agent.install(environment=offline_env())  # ty: ignore[invalid-argument-type]
     assert agent.exec_as_agent.await_count == 3
 
 
@@ -292,7 +293,7 @@ async def test_openclaw_install_gives_up_after_three_attempts(
     )
     monkeypatch.setattr(anonbench1_openclaw, "INSTALL_RETRY_DELAY_SEC", 0)
     with pytest.raises(NonZeroAgentExitCodeError):
-        await agent.install(environment="env")  # ty: ignore[invalid-argument-type]
+        await agent.install(environment=offline_env())  # ty: ignore[invalid-argument-type]
     assert agent.exec_as_agent.await_count == 3
 
 
@@ -339,7 +340,7 @@ async def test_pi_setup_attests_the_installed_version(
         version="1.1.0",
         model_api="openai-completions",
     )
-    await agent.setup(AttestEnvironment("1.1.0\n"))  # ty: ignore[invalid-argument-type]
+    await agent.setup(offline_env("1.1.0\n"))  # ty: ignore[invalid-argument-type]
     evidence = json.loads((tmp_path / "attestation.json").read_text())
     assert evidence["attested_version"] == "1.1.0"
 
@@ -356,7 +357,7 @@ async def test_hermes_setup_attests_the_installed_version(
     )
     agent.ensure_system_dependencies = AsyncMock()
     agent.exec_as_agent = AsyncMock()
-    await agent.setup(AttestEnvironment("v2026.9.24\n"))  # ty: ignore[invalid-argument-type]
+    await agent.setup(offline_env("v2026.9.24\n"))  # ty: ignore[invalid-argument-type]
     evidence = json.loads((tmp_path / "attestation.json").read_text())
     assert evidence["attested_version"] == "v2026.9.24"
 
@@ -377,7 +378,7 @@ async def test_openclaw_setup_fails_on_a_wrong_installed_version(
         model_api="openai-completions",
     )
     with pytest.raises(RuntimeError, match="does not carry the pinned"):
-        await agent.setup(AttestEnvironment("2026.9.5\n"))  # ty: ignore[invalid-argument-type]
+        await agent.setup(offline_env("2026.9.5\n"))  # ty: ignore[invalid-argument-type]
 
 
 async def test_hermes_run_writes_the_config_and_exports_usage(

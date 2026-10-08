@@ -49,6 +49,7 @@ exclude = [
   "src/anonbench1_adapters/anonbench1_openclaw.py",
   "src/anonbench1_adapters/anonbench1_hermes.py",
   "src/anonbench1_adapters/anonbench1_pins.py",
+  "src/anonbench1_adapters/anonbench1_offline_pi.py",
 ]
 
 [tool.pytest.ini_options]
@@ -70,6 +71,7 @@ extend-exclude = [
   "src/anonbench1_adapters/anonbench1_openclaw.py",
   "src/anonbench1_adapters/anonbench1_hermes.py",
   "src/anonbench1_adapters/anonbench1_pins.py",
+  "src/anonbench1_adapters/anonbench1_offline_pi.py",
 ]
 
 [tool.ruff.lint]

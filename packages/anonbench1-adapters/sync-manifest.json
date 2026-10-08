@@ -2,8 +2,12 @@
   "files": {
     "anonbench1_evidence.mjs": "a106927137bb8a4e18211576b211136a5be6d339caf24fc23eadc78daef4136a",
     "anonbench1_hermes.py": "9fdcc706e3d30b3ea0f8882e29e6b095fbed2bb927033779ac3c940d225a190c",
+    "anonbench1_offline_pi.py": "36d9ae6d482c865820eebc91a9b1c8b20d49763ff3556b6a68b737c736eca10a",
+    "anonbench1_offline_session.mjs": "ee871568158830e5ba770491be7855f29c2cbf22f22fe853c53a258a84ec8d16",
+    "anonbench1_offline_task_helper.mjs": "94302af471b341dc93101515a77ceeda1b740dcb8e102f45474caea24faab931",
+    "anonbench1_offline_tools.mjs": "465d16aff29c1b9d36a4645a5d2efc5be308c20e602ceef561e83c512c6dcc93",
     "anonbench1_openclaw.py": "5303dcd9f11ec10e7345e19189363462fdba5d1535db14f3c69a38ec71ba20e0",
-    "anonbench1_pi.py": "9e35d8825d2d76794dae4f0ee0a257a50b9785810f96ee4247e346dc18af702e",
+    "anonbench1_pi.py": "f77e48904bfc132d7c08e3cfcdf5975e90a5ed42362872d5fcfea98222aacb24",
     "anonbench1_pins.py": "e840d9d1757972bb10b122d3983a10f6c3471d84392903f8ffcf3fbf06739736"
   },
   "source_revision": "3b3566011cd195397617909bb7ef9fd9d4023650"

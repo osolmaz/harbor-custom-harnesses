@@ -34,6 +34,10 @@ COPIED_FILES = (
     ("hermes/adapter/campaign_hermes.py", "anonbench1_hermes.py"),
     ("campaign_pins.py", "anonbench1_pins.py"),
     ("pi/adapter/campaign_evidence.mjs", "anonbench1_evidence.mjs"),
+    ("pi/adapter/offline_pi.py", "anonbench1_offline_pi.py"),
+    ("pi/adapter/offline_session.mjs", "anonbench1_offline_session.mjs"),
+    ("pi/adapter/offline_task_helper.mjs", "anonbench1_offline_task_helper.mjs"),
+    ("pi/adapter/offline_tools.mjs", "anonbench1_offline_tools.mjs"),
 )
 
 # The recorded rename. The source is reviewed and pinned; this repository
@@ -59,6 +63,16 @@ def transform(data: bytes) -> bytes:
     text = text.replace(
         "from campaign_pins import", "from anonbench1_adapters.anonbench1_pins import"
     )
+    text = text.replace(
+        "from offline_pi import",
+        "from anonbench1_adapters.anonbench1_offline_pi import",
+    )
+    for asset in (
+        "offline_session.mjs",
+        "offline_task_helper.mjs",
+        "offline_tools.mjs",
+    ):
+        text = text.replace(asset, f"anonbench1_{asset}")
     # The source expects a Harbor build whose OpenClaw commands select Node 24;
     # the published launch contract pins public Harbor 3c823808, whose commands
     # select Node 22. The runtime guard replaces that prefix either way.
@@ -136,6 +150,10 @@ def main() -> int:
             ("hermes/adapter/campaign_hermes.py", "anonbench1_hermes.py"),
             ("campaign_pins.py", "anonbench1_pins.py"),
             ("pi/adapter/campaign_evidence.mjs", "anonbench1_evidence.mjs"),
+            ("pi/adapter/offline_pi.py", "anonbench1_offline_pi.py"),
+            ("pi/adapter/offline_session.mjs", "anonbench1_offline_session.mjs"),
+            ("pi/adapter/offline_task_helper.mjs", "anonbench1_offline_task_helper.mjs"),
+            ("pi/adapter/offline_tools.mjs", "anonbench1_offline_tools.mjs"),
         )
     ]
 

@@ -136,7 +136,7 @@ async def test_openclaw_install_pins_the_package_and_checks_it(tmp_path: Path) -
     agent = openclaw(tmp_path)
     agent.ensure_system_dependencies = AsyncMock()
     agent.exec_as_agent = AsyncMock()
-    await agent.install(environment="env")  # ty: ignore[invalid-argument-type]
+    await agent.install(environment=offline_env())  # ty: ignore[invalid-argument-type]
     command = agent.exec_as_agent.await_args.kwargs["command"]  # ty: ignore[unresolved-attribute]
     assert NODE_INSTALL in command
     assert "npm install -g openclaw@2026.9.8" in command
@@ -200,7 +200,7 @@ async def test_pi_install_pins_the_package_and_checks_it(tmp_path: Path) -> None
     agent = pi_agent(tmp_path)
     agent.ensure_system_dependencies = AsyncMock()
     agent.exec_as_agent = AsyncMock()
-    await agent.install(environment="env")  # ty: ignore[invalid-argument-type]
+    await agent.install(environment=offline_env())  # ty: ignore[invalid-argument-type]
     command = agent.exec_as_agent.await_args.kwargs["command"]  # ty: ignore[unresolved-attribute]
     assert NODE_INSTALL in command
     assert "@earendil-works/pi-coding-agent" in command
@@ -221,7 +221,7 @@ async def test_pi_run_checks_the_guard_and_streams_the_session(
     agent._build_register_skills_command = lambda: None  # ty: ignore[invalid-assignment]
     agent.mcp_servers = []
     monkeypatch.setattr(type(agent), "environment_logs_dir", tmp_path, raising=False)
-    await agent.run("do the task", environment="env", context=None)  # noqa: ARG001
+    await agent.run("do the task", environment=offline_env(), context=None)
     commands = [call.kwargs["command"] for call in agent.exec_as_agent.call_args_list]
     assert any("anonbench1_evidence.mjs" in command for command in commands)
     assert any("--print --mode json" in command for command in commands)
@@ -279,7 +279,7 @@ async def test_attested_openclaw_setup_writes_the_attestation_evidence(
         model_api="openai-completions",
     )
     await agent.setup(
-        _AttestEnvironment(  # ty: ignore[invalid-argument-type]
+        offline_env(  # ty: ignore[invalid-argument-type]
             "Now using node v26.11.0 (npm v11.0.0)\nOpenClaw 2026.9.8 (fc23bc8)\n"
         )
     )
@@ -300,3 +300,41 @@ class _AttestResult:
     def __init__(self, return_code: int, stdout: str) -> None:
         self.return_code = return_code
         self.stdout = stdout
+
+
+class _Policy:
+    def __init__(self, network_mode) -> None:
+        self.network_mode = network_mode
+
+
+class _FakeRunEnv:
+    """Env double for offline-tools reads; exec and upload are recorded."""
+
+    def __init__(self, stdout: str = "") -> None:
+        from harbor.models.task.config import NetworkMode
+
+        self.commands: list[str] = []
+        self.stdout = stdout
+        self.network_policy = _Policy(NetworkMode.PUBLIC)
+        self.task_env_config = _TaskEnv()
+
+    async def exec(self, command: str, **kwargs: object):
+        self.commands.append(command)
+        return type("R", (), {"return_code": 0, "stdout": self.stdout})()
+
+    def scoped_exec_env(self, _extra):
+        import contextlib
+
+        @contextlib.contextmanager
+        def _scope():
+            yield self
+
+        return _scope()
+
+
+class _TaskEnv:
+    mcp_servers: list[object] = []
+
+
+def offline_env(stdout: str = "") -> _FakeRunEnv:
+    return _FakeRunEnv(stdout)
