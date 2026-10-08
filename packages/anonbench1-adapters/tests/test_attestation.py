@@ -72,11 +72,41 @@ async def test_attestation_passes_when_the_version_matches_the_pin(
     }
 
 
+async def test_attestation_accepts_a_build_banner_carrying_the_pin(
+    tmp_path: Path,
+) -> None:
+    banner = (
+        "Hermes Agent v0.21.5 (2026.9.24)\n"
+        "Install directory: /usr/local/lib/hermes-agent\n"
+    )
+    environment = FakeEnvironment(FakeResult(stdout=banner))
+    verified = await attest_version(
+        agent(tmp_path, "v2026.9.24"),
+        environment,  # ty: ignore[invalid-argument-type]
+        "hermes",
+    )
+    assert verified == banner.rstrip("\n")
+
+
+async def test_attestation_rejects_a_banner_without_the_pin(
+    tmp_path: Path,
+) -> None:
+    banner = "Hermes Agent v0.21.5 (2026.9.20)\n"
+    environment = FakeEnvironment(FakeResult(stdout=banner))
+    with pytest.raises(RuntimeError, match="does not carry the pinned"):
+        await attest_version(
+            agent(tmp_path, "v2026.9.24"),
+            environment,  # ty: ignore[invalid-argument-type]
+            "hermes",
+        )
+    assert not (tmp_path / "attestation.json").exists()
+
+
 async def test_attestation_fails_on_a_different_installed_version(
     tmp_path: Path,
 ) -> None:
     environment = FakeEnvironment(FakeResult(stdout="2026.9.5\n"))
-    with pytest.raises(RuntimeError, match="attested version .* != pinned"):
+    with pytest.raises(RuntimeError, match="does not carry the pinned"):
         await attest_version(
             agent(tmp_path, "2026.9.8"),
             environment,  # ty: ignore[invalid-argument-type]

@@ -369,7 +369,7 @@ async def test_openclaw_setup_fails_on_a_wrong_installed_version(
         runtime="openclaw",
         model_api="openai-completions",
     )
-    with pytest.raises(RuntimeError, match="attested version .* != pinned"):
+    with pytest.raises(RuntimeError, match="does not carry the pinned"):
         await agent.setup(AttestEnvironment("2026.9.5\n"))  # ty: ignore[invalid-argument-type]
 
 

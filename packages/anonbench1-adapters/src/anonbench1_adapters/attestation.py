@@ -10,11 +10,15 @@ test a different build.
 """
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
 from harbor.agents.installed.base import BaseInstalledAgent
 from harbor.environments.base import BaseEnvironment
+
+# Dotted version tokens such as 1.0.2, 2026.9.8, or 24.16.0.
+VERSION_TOKEN = re.compile(r"\d+(?:\.\d+)+")
 
 
 async def attest_version(
@@ -39,10 +43,14 @@ async def attest_version(
         raise RuntimeError(
             f"{name}: build attestation failed; pin the version argument"
         )
-    if version != pinned:
+    # Agents print different shapes: some just the version, some a build banner
+    # such as "v0.21.5 (2026.9.24)". Compare version tokens, ignoring a v prefix.
+    pinned_token = pinned.lstrip("vV")
+    tokens = set(VERSION_TOKEN.findall(version))
+    if pinned_token not in tokens:
         raise RuntimeError(
             f"{name}: build attestation failed; "
-            f"attested version {version!r} != pinned {pinned!r}"
+            f"attested version {version!r} does not carry the pinned {pinned!r}"
         )
     record_attestation(agent.logs_dir, name, version, pinned, command)
     return version

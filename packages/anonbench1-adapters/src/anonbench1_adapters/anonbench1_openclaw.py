@@ -17,11 +17,16 @@ Harbor's adapter needs seven changes for these runs:
   reports tokens and cost.
 - Install retries a few times. In 8 OpenClaw installs on 2026-10-05, npm reset the
   connection twice. Only the install retries; a failed agent run is never repeated.
+- Every OpenClaw command runs on Node 24. Harbor's OpenClaw adapter builds its
+  install, version, and launch commands with a Node 22 helper, but the pinned
+  2026.9.8 release refuses to install or start on Node 22 (it needs >= 24.16),
+  so the helper is replaced before anything else runs.
 """
 
 import asyncio
 from typing import Any, Literal, override
 
+import harbor.agents.installed.openclaw as _openclaw_module
 from harbor.agents.installed.base import NonZeroAgentExitCodeError
 from harbor.agents.installed.openclaw import OpenClaw, OpenClawOptions
 from harbor.environments.base import BaseEnvironment
@@ -29,6 +34,18 @@ from pydantic import BaseModel, Field
 
 INSTALL_ATTEMPTS = 3
 INSTALL_RETRY_DELAY_SEC = 15
+
+
+def _nvm24(command: str) -> str:
+    return (
+        ". ~/.nvm/nvm.sh && "
+        "nvm install 24 --silent >/dev/null 2>&1; "
+        f"nvm use 24 && {command}"
+    )
+
+
+# Every OpenClaw command in this process goes through this helper.
+_openclaw_module._nvm22 = _nvm24
 
 
 class ModelPrice(BaseModel):
