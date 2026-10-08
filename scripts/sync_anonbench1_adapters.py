@@ -29,9 +29,11 @@ TARGET_DIR = REPO_ROOT / PACKAGE / "src/anonbench1_adapters"
 MANIFEST = REPO_ROOT / PACKAGE / "sync-manifest.json"
 
 COPIED_FILES = (
-    ("pi/adapter/shellbench_pi.py", "anonbench1_pi.py"),
-    ("openclaw/adapter/shellbench_openclaw.py", "anonbench1_openclaw.py"),
-    ("hermes/adapter/shellbench_hermes.py", "anonbench1_hermes.py"),
+    ("pi/adapter/campaign_pi.py", "anonbench1_pi.py"),
+    ("openclaw/adapter/campaign_openclaw.py", "anonbench1_openclaw.py"),
+    ("hermes/adapter/campaign_hermes.py", "anonbench1_hermes.py"),
+    ("campaign_pins.py", "anonbench1_pins.py"),
+    ("pi/adapter/campaign_evidence.mjs", "anonbench1_evidence.mjs"),
 )
 
 # The recorded rename. The source is reviewed and pinned; this repository
@@ -46,11 +48,21 @@ RENAMES = (
     ("ShellBench's", "Anonbench1's"),
     ("ShellBench", "Anonbench1"),
     ("shellbench", "anonbench1"),
+    ("campaign_evidence.mjs", "anonbench1_evidence.mjs"),
 )
 
 
 def transform(data: bytes) -> bytes:
     text = data.decode("utf-8")
+    # The source adapters import the shared pins module by its bare source name;
+    # the published package keeps it inside anonbench1_adapters.
+    text = text.replace(
+        "from campaign_pins import", "from anonbench1_adapters.anonbench1_pins import"
+    )
+    # The source expects a Harbor build whose OpenClaw commands select Node 24;
+    # the published launch contract pins public Harbor 3c823808, whose commands
+    # select Node 22. The runtime guard replaces that prefix either way.
+    text = text.replace("nvm use 24 >/dev/null && ", "nvm use 22 && ")
     for old, new in RENAMES:
         text = text.replace(old, new)
     return text.encode("utf-8")
@@ -119,9 +131,11 @@ def main() -> int:
     pairs: list[tuple[Path | None, Path]] = [
         (args.source_root / relative if args.source_root else None, TARGET_DIR / target)
         for relative, target in (
-            ("pi/adapter/shellbench_pi.py", "anonbench1_pi.py"),
-            ("openclaw/adapter/shellbench_openclaw.py", "anonbench1_openclaw.py"),
-            ("hermes/adapter/shellbench_hermes.py", "anonbench1_hermes.py"),
+            ("pi/adapter/campaign_pi.py", "anonbench1_pi.py"),
+            ("openclaw/adapter/campaign_openclaw.py", "anonbench1_openclaw.py"),
+            ("hermes/adapter/campaign_hermes.py", "anonbench1_hermes.py"),
+            ("campaign_pins.py", "anonbench1_pins.py"),
+            ("pi/adapter/campaign_evidence.mjs", "anonbench1_evidence.mjs"),
         )
     ]
 

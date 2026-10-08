@@ -1,8 +1,10 @@
 {
   "files": {
-    "anonbench1_hermes.py": "4f4a55575300a8308b3ece3d4df76ee3af35c549ddda7e6c2cd6c32efbeb6f1f",
-    "anonbench1_openclaw.py": "ac8cd526d68d38009737760d987ef368db1cf49fbfb9a7b07988b46f723ad58e",
-    "anonbench1_pi.py": "24c85876a50bb4e517ae5ab397b8377a511dab921445414c8eef92813a4e1a0f"
+    "anonbench1_evidence.mjs": "a106927137bb8a4e18211576b211136a5be6d339caf24fc23eadc78daef4136a",
+    "anonbench1_hermes.py": "9fdcc706e3d30b3ea0f8882e29e6b095fbed2bb927033779ac3c940d225a190c",
+    "anonbench1_openclaw.py": "90ce9dd8b086a08f278e73bb4eb48343ea1d81fdfa83739edc28474244cd1bed",
+    "anonbench1_pi.py": "6d0f590bbb6eb939f24a002f60beb8c926a983539cfc3719964f58c1e9bacde2",
+    "anonbench1_pins.py": "e840d9d1757972bb10b122d3983a10f6c3471d84392903f8ffcf3fbf06739736"
   },
-  "source_revision": "e4572d363f8aab6a92ed6ad6fa8a6558e17c0dda"
+  "source_revision": "fb341b066b2b64174fc54a8ebc3a121bd89aff33"
 }

@@ -9,9 +9,9 @@
 # wheel carries no credentials and no task data.
 FROM ghcr.io/huggingface/harbor-hf-trial-worker@sha256:f01b7ce139cd705a752411417fbd5d4783fc9f128b0dd156b32d5f2ee8103417
 
-COPY packages/anonbench1-adapters/dist/harbor_anonbench1_adapters-0.1.0rc2-py3-none-any.whl /tmp/
+COPY packages/anonbench1-adapters/dist/harbor_anonbench1_adapters-0.1.0rc3-py3-none-any.whl /tmp/
 
 RUN uv pip install --python /opt/harbor-hf-parent \
-        /tmp/harbor_anonbench1_adapters-0.1.0rc2-py3-none-any.whl \
+        /tmp/harbor_anonbench1_adapters-0.1.0rc3-py3-none-any.whl \
     && python -c "from anonbench1_adapters import Anonbench1Hermes, Anonbench1OpenClaw, Anonbench1Pi" \
-    && rm /tmp/harbor_anonbench1_adapters-0.1.0rc2-py3-none-any.whl
+    && rm /tmp/harbor_anonbench1_adapters-0.1.0rc3-py3-none-any.whl

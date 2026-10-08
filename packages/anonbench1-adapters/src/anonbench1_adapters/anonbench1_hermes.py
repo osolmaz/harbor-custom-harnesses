@@ -1,5 +1,9 @@
 """Anonbench1's Hermes adapter, built on Harbor's adapter at the pinned commit.
 
+This dated copy downloads the installer by full SHA, passes --commit, and checks
+the installed source SHA, launcher, package version and exact Node at runtime.
+It never changes an existing checkout to repair a mismatch.
+
 Harbor's adapter needs five changes for Hermes v2026.9.24:
 
 - Install with the installer from the pinned tag. Harbor downloads it from main, and that
@@ -27,6 +31,15 @@ import shlex
 from typing import Any, Literal, override
 
 import yaml
+from anonbench1_adapters.anonbench1_pins import (
+    HERMES_INSTALL_DIR,
+    HERMES_SHA,
+    HERMES_TAG,
+    HERMES_VERSION,
+    NODE_INSTALL,
+    NODE_SELECT,
+    require_version,
+)
 from harbor.agents.installed.base import NonZeroAgentExitCodeError, with_prompt_template
 from harbor.agents.installed.hermes import Hermes, HermesOptions
 from harbor.environments.base import BaseEnvironment
@@ -38,11 +51,15 @@ HERMES_HOME = "/tmp/hermes"
 SESSION_LOG = "/logs/agent/hermes-session.jsonl"
 USAGE_LOG = "/logs/agent/hermes-usage.json"
 USAGE_FIELDS = ("input_tokens", "cache_read_tokens", "cache_write_tokens", "output_tokens")
+HERMES_COMMAND = (
+    f'env -u PYTHONPATH -u PYTHONHOME "{HERMES_INSTALL_DIR}/venv/bin/python" '
+    f'"{HERMES_INSTALL_DIR}/hermes"'
+)
 # Runs with Hermes's own Python, next to the hermes launcher in its venv, because the
 # task image may have no Python. A failure leaves no usage file, and tokens stay unknown.
 DUMP_USAGE = f"""
 export PATH="$HOME/.local/bin:$PATH"
-py="$(dirname "$(readlink -f "$(command -v hermes)")")/python"
+py="{HERMES_INSTALL_DIR}/venv/bin/python"
 "$py" - > {USAGE_LOG}.tmp << 'PYEOF' && mv {USAGE_LOG}.tmp {USAGE_LOG} || rm -f {USAGE_LOG}.tmp
 import json, sqlite3
 con = sqlite3.connect("file:{HERMES_HOME}/state.db?mode=ro", uri=True)
@@ -84,12 +101,11 @@ class Anonbench1Hermes(Hermes):
 
     @override
     def get_version_command(self) -> str | None:
-        return 'export PATH="$HOME/.local/bin:$PATH"; hermes --version'
+        return f"{self._runtime_guard()} && {HERMES_COMMAND} --version"
 
     @override
     async def install(self, environment: BaseEnvironment) -> None:
-        if not self._version:
-            raise ValueError("Pin Hermes to a release tag with the version argument")
+        require_version(self._version, HERMES_TAG)
         for attempt in range(1, INSTALL_ATTEMPTS + 1):
             try:
                 await self._install_once(environment)
@@ -107,12 +123,23 @@ class Anonbench1Hermes(Hermes):
             environment,
             command=(
                 "set -euo pipefail; "
-                f"curl -fsSL {INSTALLER.format(ref=self._version)} "
-                f"| bash -s -- --skip-setup --branch {shlex.quote(self._version)} && "
+                f"{NODE_INSTALL} && curl -fsSL {INSTALLER.format(ref=HERMES_SHA)} "
+                f"| bash -s -- --skip-setup --branch {HERMES_TAG} --commit {HERMES_SHA} "
+                f'--dir "{HERMES_INSTALL_DIR}" && '
                 'export PATH="$HOME/.local/bin:$PATH" && '
                 f"mkdir -p {HERMES_HOME}/sessions {HERMES_HOME}/skills {HERMES_HOME}/memories && "
-                "hermes --version"
+                f"{self._runtime_guard()} && {HERMES_COMMAND} --version"
             ),
+        )
+
+    def _runtime_guard(self) -> str:
+        expression = "from hermes_cli import __version__; print(__version__)"
+        return (
+            f"{NODE_SELECT} && "
+            f'test "$(git -C "{HERMES_INSTALL_DIR}" rev-parse HEAD)" = {HERMES_SHA} && '
+            f'git -C "{HERMES_INSTALL_DIR}" diff --quiet HEAD -- && '
+            f'test "$("{HERMES_INSTALL_DIR}/venv/bin/python" -I -c '
+            f'{shlex.quote(expression)})" = {HERMES_VERSION}'
         )
 
     def build_config(self) -> dict[str, Any]:
@@ -142,6 +169,11 @@ class Anonbench1Hermes(Hermes):
     async def run(
         self, instruction: str, environment: BaseEnvironment, context: AgentContext
     ) -> None:
+        require_version(self._version, HERMES_TAG)
+        await self.exec_as_agent(
+            environment,
+            command='export PATH="$HOME/.local/bin:$PATH" && ' + self._runtime_guard(),
+        )
         if self._resume:
             raise RuntimeError("This adapter runs single-step tasks only")
         config_yaml = yaml.safe_dump(self.build_config(), sort_keys=False)
@@ -165,7 +197,8 @@ class Anonbench1Hermes(Hermes):
         flags = self.build_cli_flags()
         run = (
             'export PATH="$HOME/.local/bin:$PATH" && '
-            f'hermes --yolo chat -q "$HARBOR_INSTRUCTION" -Q {flags} '
+            f"{self._runtime_guard()} && "
+            f'{HERMES_COMMAND} --yolo chat -q "$HARBOR_INSTRUCTION" -Q {flags} '
             "2>&1 | stdbuf -oL tee /logs/agent/hermes.txt"
         )
         try:
@@ -175,7 +208,7 @@ class Anonbench1Hermes(Hermes):
                 environment,
                 command=(
                     'export PATH="$HOME/.local/bin:$PATH" && '
-                    f"hermes sessions export {SESSION_LOG} --source oneshot 2>/dev/null || true"
+                    f"{HERMES_COMMAND} sessions export {SESSION_LOG} --source oneshot 2>/dev/null || true"
                 ),
                 env={"HERMES_HOME": HERMES_HOME},
                 timeout_sec=30,

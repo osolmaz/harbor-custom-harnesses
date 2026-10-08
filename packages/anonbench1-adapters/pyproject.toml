@@ -1,6 +1,6 @@
 [project]
 name = "harbor-anonbench1-adapters"
-version = "0.1.0rc2"
+version = "0.1.0rc3"
 description = "Pinned native Harbor adapters for the Anonbench1 pi, OpenClaw, and Hermes runs"
 requires-python = ">=3.12"
 license = "MIT"
@@ -42,6 +42,15 @@ error-on-warning = true
 [tool.ty.analysis]
 respect-type-ignore-comments = false
 
+[tool.ty.src]
+# The synced adapter modules are generated copies (see the ruff exclude note).
+exclude = [
+  "src/anonbench1_adapters/anonbench1_pi.py",
+  "src/anonbench1_adapters/anonbench1_openclaw.py",
+  "src/anonbench1_adapters/anonbench1_hermes.py",
+  "src/anonbench1_adapters/anonbench1_pins.py",
+]
+
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers --cov=anonbench1_adapters --cov-branch --cov-fail-under=85"
 testpaths = ["tests"]
@@ -53,13 +62,14 @@ source = ["anonbench1_adapters"]
 [tool.ruff]
 line-length = 88
 target-version = "py312"
-# The three copied adapter modules are verbatim 1-1 copies of the harbor-config
-# source, restored by scripts/sync_anonbench1_adapters.py. Formatting them would
-# break the sync, so they stay outside ruff entirely.
+# The copied adapter modules are verbatim copies of the harbor-config source
+# (restored by scripts/sync_anonbench1_adapters.py), except for the recorded
+# renames. Formatting them would break the sync, so they stay outside ruff.
 extend-exclude = [
   "src/anonbench1_adapters/anonbench1_pi.py",
   "src/anonbench1_adapters/anonbench1_openclaw.py",
   "src/anonbench1_adapters/anonbench1_hermes.py",
+  "src/anonbench1_adapters/anonbench1_pins.py",
 ]
 
 [tool.ruff.lint]

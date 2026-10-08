@@ -1,14 +1,16 @@
 """Anonbench1's OpenClaw adapter, built on Harbor's adapter at the pinned commit.
 
+This dated copy also pins Node 26.11.1 and OpenClaw 2026.9.8 during installation
+and before runtime commands. Provider selection and trajectory capture are inherited.
+
 Harbor's adapter needs seven changes for these runs:
 
 - The runtime is explicit. OpenClaw otherwise picks one itself.
 - The run's model is OpenClaw's default and utility model, so side tasks use the same
   model as the agent.
 - The run's model is also the PDF and image model. Without these, OpenClaw's PDF tool
-  sends the extracted PDF text to OpenClaw's built-in default, gpt-6-astra: in the smoke
-  test the HF router rejected that request, so the PDF tool failed, and on an OpenAI
-  endpoint a different model would read the PDF. The image tool falls back the same way.
+  can send the extracted PDF text to a different default model. The image tool falls
+  back the same way, so both are bound to this run's model.
 - Code mode is on unless the job config turns it off.
 - A custom endpoint gets a model entry with the provider's own model ID. Harbor's adapter
   registers the model under its Harbor name, with the provider prefix, which OpenClaw
@@ -17,16 +19,12 @@ Harbor's adapter needs seven changes for these runs:
   reports tokens and cost.
 - Install retries a few times. In 8 OpenClaw installs on 2026-10-05, npm reset the
   connection twice. Only the install retries; a failed agent run is never repeated.
-- Every OpenClaw command runs on Node 24. Harbor's OpenClaw adapter builds its
-  install, version, and launch commands with a Node 22 helper, but the pinned
-  2026.9.8 release refuses to install or start on Node 22 (it needs >= 24.16),
-  so the helper is replaced before anything else runs.
 """
 
 import asyncio
 from typing import Any, Literal, override
 
-import harbor.agents.installed.openclaw as _openclaw_module
+from anonbench1_adapters.anonbench1_pins import NODE_INSTALL, PinnedNodeRuntime, npm_guard, require_version
 from harbor.agents.installed.base import NonZeroAgentExitCodeError
 from harbor.agents.installed.openclaw import OpenClaw, OpenClawOptions
 from harbor.environments.base import BaseEnvironment
@@ -34,18 +32,6 @@ from pydantic import BaseModel, Field
 
 INSTALL_ATTEMPTS = 3
 INSTALL_RETRY_DELAY_SEC = 15
-
-
-def _nvm24(command: str) -> str:
-    return (
-        ". ~/.nvm/nvm.sh && "
-        "nvm install 24 --silent >/dev/null 2>&1; "
-        f"nvm use 24 && {command}"
-    )
-
-
-# Every OpenClaw command in this process goes through this helper.
-_openclaw_module._nvm22 = _nvm24
 
 
 class ModelPrice(BaseModel):
@@ -70,15 +56,30 @@ class Anonbench1OpenClawOptions(OpenClawOptions):
     max_output_tokens: int | None = Field(default=None, ge=1)
 
 
-class Anonbench1OpenClaw(OpenClaw):
+class Anonbench1OpenClaw(PinnedNodeRuntime, OpenClaw):
+    package = "openclaw"
+    pinned_version = "2026.9.8"
+    executable = "openclaw"
     options_model = Anonbench1OpenClawOptions
     options: Anonbench1OpenClawOptions
 
     @override
     async def install(self, environment: BaseEnvironment) -> None:
+        require_version(self._version, self.pinned_version)
         for attempt in range(1, INSTALL_ATTEMPTS + 1):
             try:
-                await super().install(environment)
+                await self.ensure_system_dependencies(environment, ("curl", "ca_certificates"))
+                await self.exec_as_agent(
+                    environment,
+                    command=(
+                        f"{NODE_INSTALL} && npm install -g openclaw@{self.pinned_version} && "
+                        'mkdir -p "$HOME/.local/share/harbor/openclaw-atif" && '
+                        'npm install --prefix "$HOME/.local/share/harbor/openclaw-atif" '
+                        "--save-exact --omit=dev --ignore-scripts @openclaw/openclaw-atif@0.1.4 && "
+                        f"{npm_guard(self.package, self.pinned_version)} && openclaw --version"
+                    ),
+                    timeout_sec=self._install_exec_timeout_sec,
+                )
                 return
             except NonZeroAgentExitCodeError:
                 if attempt == INSTALL_ATTEMPTS:

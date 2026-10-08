@@ -115,7 +115,7 @@ def test_openclaw_endpoint_needs_a_model_api(tmp_path: Path) -> None:
 
 
 def pi(tmp_path: Path, **kwargs: object) -> Anonbench1Pi:
-    options = {"version": "1.0.2", "model_api": "openai-completions"}
+    options = {"version": "1.1.0", "model_api": "openai-completions"}
     return Anonbench1Pi(
         logs_dir=tmp_path,
         model_name=MODEL,
@@ -140,17 +140,14 @@ def test_pi_codemode_can_be_turned_off(tmp_path: Path) -> None:
 async def test_pi_install_retries_a_network_failure(
     tmp_path: Path, monkeypatch
 ) -> None:
-    calls = []
-
-    async def flaky_install(self, environment):
-        calls.append(environment)
-        if len(calls) < 2:
-            raise NetworkConnectionError("npm error network")
-
-    monkeypatch.setattr(anonbench1_pi.Pi, "install", flaky_install)
+    agent = pi(tmp_path)
+    agent.ensure_system_dependencies = AsyncMock()
+    agent.exec_as_agent = AsyncMock(
+        side_effect=[NetworkConnectionError("npm error network"), None]
+    )
     monkeypatch.setattr(anonbench1_pi, "INSTALL_RETRY_DELAY_SEC", 0)
-    await pi(tmp_path).install(environment="env")  # ty: ignore[invalid-argument-type]
-    assert len(calls) == 2
+    await agent.install(environment="env")  # ty: ignore[invalid-argument-type]
+    assert agent.exec_as_agent.await_count == 2
 
 
 def test_pi_endpoint_model_carries_price_and_limits(tmp_path: Path) -> None:
@@ -199,7 +196,10 @@ def test_hermes_refuses_to_drop_code_mode(tmp_path: Path) -> None:
 
 
 def test_hermes_checks_version_with_the_current_flag(tmp_path: Path) -> None:
-    assert hermes(tmp_path).get_version_command().endswith("hermes --version")  # ty: ignore[unresolved-attribute]
+    command = hermes(tmp_path).get_version_command()
+    assert command.endswith("--version")  # ty: ignore[unresolved-attribute]
+    assert "rev-parse HEAD" in command  # ty: ignore[unsupported-operator]
+    assert "--version__" not in command  # ty: ignore[unsupported-operator]
 
 
 async def test_hermes_installs_from_the_pinned_tag(tmp_path: Path) -> None:
@@ -208,9 +208,13 @@ async def test_hermes_installs_from_the_pinned_tag(tmp_path: Path) -> None:
     agent.exec_as_agent = AsyncMock()
     await agent.install(environment=AsyncMock())
     command = agent.exec_as_agent.await_args.kwargs["command"]  # ty: ignore[unresolved-attribute]
-    assert "hermes-agent/v2026.9.24/scripts/install.sh" in command
+    assert (
+        "hermes-agent/f97608f178d1ffeca59860195ab7da295f7c8e5f/scripts/install.sh"
+        in command
+    )
     assert "/main/" not in command
     assert "--branch v2026.9.24" in command
+    assert "--commit f97608f178d1ffeca59860195ab7da295f7c8e5f" in command
 
 
 def test_hermes_counts_main_side_and_subagent_calls() -> None:
@@ -264,29 +268,32 @@ def test_hermes_reports_unknown_tokens_without_the_usage_table(tmp_path: Path) -
 async def test_openclaw_install_retries_then_succeeds(
     tmp_path: Path, monkeypatch
 ) -> None:
-    calls = []
-
-    async def flaky_install(self, environment):
-        calls.append(environment)
-        if len(calls) < 3:
-            raise NonZeroAgentExitCodeError("npm error code ECONNRESET")
-
-    monkeypatch.setattr(anonbench1_openclaw.OpenClaw, "install", flaky_install)
+    agent = openclaw(tmp_path)
+    agent.ensure_system_dependencies = AsyncMock()
+    agent.exec_as_agent = AsyncMock(
+        side_effect=[
+            NonZeroAgentExitCodeError("npm error code ECONNRESET"),
+            NonZeroAgentExitCodeError("npm error code ECONNRESET"),
+            None,
+        ]
+    )
     monkeypatch.setattr(anonbench1_openclaw, "INSTALL_RETRY_DELAY_SEC", 0)
-    await openclaw(tmp_path).install(environment="env")  # ty: ignore[invalid-argument-type]
-    assert len(calls) == 3
+    await agent.install(environment="env")  # ty: ignore[invalid-argument-type]
+    assert agent.exec_as_agent.await_count == 3
 
 
 async def test_openclaw_install_gives_up_after_three_attempts(
     tmp_path: Path, monkeypatch
 ) -> None:
-    async def broken_install(self, environment):
-        raise NonZeroAgentExitCodeError("npm error code ECONNRESET")
-
-    monkeypatch.setattr(anonbench1_openclaw.OpenClaw, "install", broken_install)
+    agent = openclaw(tmp_path)
+    agent.ensure_system_dependencies = AsyncMock()
+    agent.exec_as_agent = AsyncMock(
+        side_effect=NonZeroAgentExitCodeError("npm error code ECONNRESET")
+    )
     monkeypatch.setattr(anonbench1_openclaw, "INSTALL_RETRY_DELAY_SEC", 0)
     with pytest.raises(NonZeroAgentExitCodeError):
-        await openclaw(tmp_path).install(environment="env")  # ty: ignore[invalid-argument-type]
+        await agent.install(environment="env")  # ty: ignore[invalid-argument-type]
+    assert agent.exec_as_agent.await_count == 3
 
 
 async def test_hermes_install_retries_a_network_failure(
@@ -324,17 +331,17 @@ async def test_pi_setup_attests_the_installed_version(
     async def ok_install(self, environment):
         return None
 
-    monkeypatch.setattr(anonbench1_pi.Pi, "install", ok_install)
+    monkeypatch.setattr(anonbench1_pi.Anonbench1Pi, "install", ok_install)
     agent = AttestedPi(
         logs_dir=tmp_path,
         model_name=MODEL,
         extra_env=ENV,
-        version="1.0.2",
+        version="1.1.0",
         model_api="openai-completions",
     )
-    await agent.setup(AttestEnvironment("1.0.2\n"))  # ty: ignore[invalid-argument-type]
+    await agent.setup(AttestEnvironment("1.1.0\n"))  # ty: ignore[invalid-argument-type]
     evidence = json.loads((tmp_path / "attestation.json").read_text())
-    assert evidence["attested_version"] == "1.0.2"
+    assert evidence["attested_version"] == "1.1.0"
 
 
 async def test_hermes_setup_attests_the_installed_version(
@@ -360,7 +367,7 @@ async def test_openclaw_setup_fails_on_a_wrong_installed_version(
     async def ok_install(self, environment):
         return None
 
-    monkeypatch.setattr(anonbench1_openclaw.OpenClaw, "install", ok_install)
+    monkeypatch.setattr(anonbench1_openclaw.Anonbench1OpenClaw, "install", ok_install)
     agent = AttestedOpenClaw(
         logs_dir=tmp_path,
         model_name=MODEL,
@@ -382,6 +389,6 @@ async def test_hermes_run_writes_the_config_and_exports_usage(
     await agent.run("do the task", environment=AsyncMock(), context=AgentContext())
     commands = [call.kwargs["command"] for call in agent.exec_as_agent.call_args_list]
     assert any("config.yaml" in command for command in commands)
-    assert any("hermes --yolo chat" in command for command in commands)
-    assert any("hermes sessions export" in command for command in commands)
-    assert any("session_model_usage" in command for command in commands)
+    assert any("--yolo chat" in command for command in commands)
+    assert any("sessions export" in command for command in commands)
+    assert any("state.db" in command for command in commands)
